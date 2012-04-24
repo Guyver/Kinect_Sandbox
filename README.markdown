@@ -1,5 +1,7 @@
-## Join-In
-http://www.helmholtz-muenchen.de/en/join-in/home
+## Kinect_Sandbox
+
+Used as a sandbox enviornment to test and debug data from Microsoft's Kinect device.
+A clean enviornment to develop games from with code snippets from mrDoob's Three.js rendering library.
 
 #The open source device library for interfacing the Kinect.
 
@@ -13,8 +15,6 @@ http://nodejs.org/
 
 https://github.com/mrdoob/three.js/
 
-
-Dev Branch, May not be stable.
 
 #How to use
 
