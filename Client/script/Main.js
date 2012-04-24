@@ -18,6 +18,10 @@ var scene, renderer, mesh, geometry, material;
 // Camera vars, initalised in "initCamera()"
 var camera, nearClip, farClip, aspectRatio, fov;
 
+// remember these initial values
+var tanFOV ;
+var windowHeight = window.innerHeight;
+
 // Kinect data
 var numJoints, model, jointList;
 
@@ -29,12 +33,21 @@ var deltaTime, last, current;
 
 var imgContainer;
 
+// Debugging Variable.
+var test;
 
-/*====================================INIT()==========================================
+
+/**====================================INIT()==========================================
 
 	Initalise some variables needed for start up.
 //========================================================================*/
 function init(){
+	
+	// Loop until the image manager is finished loading.
+	while( !imageManager.isDone() ){
+		
+		test = 0;
+	}
 	
 	container = document.createElement( 'div' );
 	document.body.appendChild( container );
@@ -63,16 +76,6 @@ function init(){
 	// Skybox...etc
 	setupEnviornment();
 	
-	
-	
-	var x = new THREE.ColladaLoader();
-	x.load( 'models/warehouse_model.dae', function( collada ){
-		var model = collada.scene;
-		model.scale.set(100,100,100);
-		model.rotation.x = -Math.PI/2;
-		scene.add( model );	
-	
-	});
 	// Initalise the game loop to 60fps. Anim frame pffft
 	interval = setInterval( 'gameLoop()', 1000 / 60 );
 
@@ -81,12 +84,13 @@ function init(){
 
 
 
-/*================================INIT CAMERA()==========================
+/**================================INIT CAMERA()==========================
 
 	Initalise our Three camera.
 
 ========================================================================*/
 function initCamera(){
+	
 	
 	nearClip = 1;
 	farClip = 100000;
@@ -95,13 +99,15 @@ function initCamera(){
 	camera = new THREE.PerspectiveCamera( fov, aspectRatio, nearClip, farClip );
 	camera.position.y = 150;
 	camera.position.z = 1000;
+	// Will be used to rescale the view frustrum on window resize...
+	tanFOV = Math.tan( ( ( Math.PI / 180 ) * camera.fov / 2 ) );
 	scene.add( camera );
 }
 
 
 
 
-/*================================INIT SCENE()========================================
+/**================================INIT SCENE()========================================
 
 	Initalise the scene that will contain all the game data.
 
@@ -115,12 +121,12 @@ function initScene(){
 
 
 
-/*===============================INIT RENDERER()======================================
+/**===============================INIT RENDERER()======================================
 
 	Set up the renderer that will decide render what is in the view frustrum.
 	This will be a CANVAS renderer, not webgl. For the test at least.
 
-//========================================================================*/
+========================================================================*/
 function initRenderer(){
 	
 	/*renderer = new THREE.CanvasRenderer();*/
@@ -145,7 +151,7 @@ function initRenderer(){
 
 
 
-/*===============================SETUP LIGHTS()=======================================
+/**===============================SETUP LIGHTS()=======================================
 
 	Let there be light!
 
@@ -179,7 +185,7 @@ function setupLights(){
 
 
 
-/*===============================CREATE OBJECTS()=====================================
+/**===============================CREATE OBJECTS()=====================================
 
 	Set up stuff! Args: Name, Position (vector3), Mesh (Three.Mesh)
 ========================================================================*/
@@ -202,14 +208,13 @@ function createObjects(){
 				'RIGHT_SHOULDER',
 				'TORSO'];
 				
-		player = new Player( 'James', 42, 'model/monster.dae', new THREE.Vector3( 100,100,100) );
-
+		player = new Player( 'James', 42, "", new THREE.Vector3( 100,100,100) );//'model/monster.dae'
 		
 }
 
 
 
-/*===============================GAME LOOP()==========================================
+/**===============================GAME LOOP()==========================================
 
 	This is the main game loop. Where all the magic happens if you will.
 	I'm calculating delta time here to use for Newtonian Mechanics. :D
@@ -221,6 +226,7 @@ function gameLoop(){
 	if(!last)	{
 		last= new Date();
 	}
+	
 	
 	// Set the camera Z to the gui for debugging!
 	camera.position.x = param['cameraX'];
@@ -261,17 +267,14 @@ function gameLoop(){
 		return;
 	}
 	
-	// Wait for assets to load and begin the game loop.
-	if( imagesLoaded ){
 		render();
-	}
 
 }
 
 
 
 
-/*================================RENDER()============================================
+/**================================RENDER()============================================
 	
 	Render some stuff to the html page.
 	
@@ -288,7 +291,7 @@ function render(){
 
 
 
-/*================================SETUP GUI()=========================================
+/**================================SETUP GUI()=========================================
 
 	Make the Gui do stuff, the callbacks for changable variables is in here. 
 	I did it like this so I can change the time step and watch at run time.
@@ -309,8 +312,8 @@ function setupGui(){
 	 fps:60,
 	 parallaxSpeed:2,
 	 cameraX:0,
-	 cameraY:0,
-	 cameraZ:1000
+	 cameraY:500,
+	 cameraZ:-500
 	 };
 	 
 	 // Add the paramater values to the GUI, give it a name, upon change specify the callback function.
@@ -357,7 +360,7 @@ function setupGui(){
 
 
 
-/*================================SETUP ENVIORNMENT()=================================
+/**================================SETUP ENVIORNMENT()=================================
 
 	Create a box around the origin for testing.
 	Will be a nice sandbox to play with our model.
@@ -365,23 +368,136 @@ function setupGui(){
 ========================================================================*/
 function setupEnviornment(){
 
-	// Create a texture from an image, image mush be a power of 2 in size. i.e 512*256
-	var texture_blue = new THREE.Texture( imageManager.getAsset( 'img/target_blue.png', {}, render() ));
+	//
+	// Create Sky Box.
+	//
+	Skybox();
+	
+	//
+	// Create Plane
+	//
+	
+	var planeTex = new THREE.Texture(imageManager.getAsset('img/ground_plane.png', {}, render()));
+	
+	planeTex.needsUpdate = true;
+	
+	var planeGeo = new THREE.PlaneGeometry(100000, 100000, 1, 10);
+	
+	var ground = new THREE.Mesh( planeGeo, new THREE.MeshBasicMaterial({
+		 map: planeTex 
+	}));
+	
+	ground .rotation.x = -Math.PI / 2;
+	ground .position.y = 0;
+	ground .receiveShadow = true;
+	ground.doubleSided = true;
+	scene.add( ground );
 
-	// Oh yes, it does need this!
-	texture_blue.needsUpdate = true;
-	var geometry = new THREE.CubeGeometry( 10000, 10000,  10000);
-	
-	var texture = new THREE.Mesh( geometry, new THREE.MeshBasicMaterial( { map: texture_blue } ) );
-	texture.doubleSided = true;
-	
-	scene.add( texture );
 }
 
 
 
 
-/*=================================SYNC KINECT()=============================================
+/**================================SKY BOX()=================================
+
+	Create a sky box from 6 images, one for each +ve and -ve axis.
+	
+========================================================================*/
+function Skybox(){
+ 	
+	var urlPrefix	= "img/";
+	var urls = [ urlPrefix + "target_red.png", urlPrefix + "target_red.png",
+			urlPrefix + "target_green.png", urlPrefix + "target_green.png",
+			urlPrefix + "target_blue.png", urlPrefix + "target_blue.png" ];
+	var textureCube	= THREE.ImageUtils.loadTextureCube( urls );
+	textureCube.needsUpdate = true;
+	
+	var shader	= THREE.ShaderUtils.lib["cube"];
+	shader.uniforms["tCube"].texture = textureCube;
+	var material = new THREE.ShaderMaterial({
+		
+		fragmentShader	: shader.fragmentShader,
+		vertexShader	: shader.vertexShader,
+		uniforms	: shader.uniforms
+	});
+
+	skyboxMesh	= new THREE.Mesh( new THREE.CubeGeometry( 100000, 100000, 100000, 1, 1, 1, null, true ), material );
+	skyboxMesh.doubleSided = true;
+	
+	scene.add( skyboxMesh );	
+	
+ }
+ 
+ 
+ 
+ 
+ /**================================Example Code()=================================
+
+	Code snippets and testing goes in here while developing.
+	
+========================================================================*/
+ function ExampleCode(){
+ 	
+	//
+	// Create Sky Cube.
+	//
+/**	
+	// Create a texture from an image, image mush be a power of 2 in size. i.e 512*256
+	var texture_blue = new THREE.Texture(imageManager.getAsset('img/target_blue.png', {}, render()));
+	// Oh yes, it does need this!
+	texture_blue.needsUpdate = true;
+	
+	var geometry = new THREE.CubeGeometry(10000, 10000, 10000);
+	
+	var texture = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({
+		map: texture_blue
+	}));
+	texture.doubleSided = true;
+	
+	scene.add(texture);
+*/	
+
+	//
+	// Load a model and add it to the scene.
+	//
+/**
+	var x = new THREE.ColladaLoader();
+	x.load( 'models/warehouse_model.dae', function( collada ){
+		var model = collada.scene;
+		model.scale.set(100,100,100);
+		model.rotation.x = -Math.PI/2;
+		scene.add( model );	
+	
+	});
+*/
+
+
+	//
+	// Create Plane
+	//
+/**	
+	var planeTex = new THREE.Texture(imageManager.getAsset('img/ground_plane.png', {}, render()));
+	
+	planeTex.needsUpdate = true;
+	
+	var planeGeo = new THREE.PlaneGeometry(10000, 10000, 1, 10);
+	
+	var ground = new THREE.Mesh( planeGeo, new THREE.MeshBasicMaterial({
+		 map: planeTex 
+	}));
+	
+	ground .rotation.x = -Math.PI / 2;
+	ground .position.y = 0;
+	ground .receiveShadow = true;
+	ground.doubleSided = true;
+	scene.add( ground );
+*/	
+	
+	
+ }
+
+
+/**=================================SYNC KINECT()=============================================
 
 	Syncronise the model with the Kinect data we've got from openNi
 ========================================================================*/
@@ -393,7 +509,7 @@ function syncKinect() {
 
 
 
-/*=================================LOAD()=============================================
+/**=================================LOAD()=============================================
 
 	Fired whenis called when the window loads!
 ========================================================================*/
@@ -404,7 +520,7 @@ function load() {
 
 
 
-/*=================================RANDOM RANGE()=====================================
+/**=================================RANDOM RANGE()=====================================
 
 	Helper function for random numbers
 ========================================================================*/
@@ -415,16 +531,24 @@ function randomRange(min, max) {
 
 
 
-/*==================================RESIZE()==========================================
+/**==================================RESIZE()==========================================
 
 	Helper function for resizing the display
-//========================================================================*/
+========================================================================*/
 function resize(){
     
-	// Fit the render area into the window.
-	renderer.setSize( window.innerWidth, window.innerHeight );
-    	// Redraw 
-    	render();
+	camera.aspect = window.innerWidth / window.innerHeight;
+    
+    // adjust the FOV
+    camera.fov = ( 360 / Math.PI ) * Math.atan( tanFOV * ( window.innerHeight / windowHeight ) );
+    
+    camera.updateProjectionMatrix();
+    camera.lookAt( scene.position );
+
+    renderer.setSize( window.innerWidth, window.innerHeight );
+	
+    // Redraw 
+    render();
 }
 
 window.addEventListener('resize', resize, false);

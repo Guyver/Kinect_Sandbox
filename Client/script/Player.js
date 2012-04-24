@@ -30,7 +30,10 @@ function Player( name, id, meshUrl, position){
 	// The unique id, i.p address for Example.
 	this._id = id;
 	// The avatar url.
-	this._model = this.loadModelMesh( meshUrl );
+	if( meshUrl != ""){
+		this._model = this.loadModelMesh( meshUrl );
+	}
+	
 	// The data for the joints
 	this._rig = new Model( jointList );
 	// The global position.
@@ -121,7 +124,9 @@ Player.prototype.setPosition = function( pos ){
 */
 Player.prototype.getPosition = function(  ){
 
-	return ( this._position );
+	//return ( this._position );
+	
+	return this._rig.getPosition();
 };
 
 
