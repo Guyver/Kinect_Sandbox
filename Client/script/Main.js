@@ -229,12 +229,14 @@ function gameLoop(){
 	
 	
 	// Set the camera Z to the gui for debugging!
-	camera.position.x = param['cameraX'];
-	camera.position.y = param['cameraY'];
-	camera.position.z = param['cameraZ'];
+	//camera.position.x = param['cameraX'];
+	//camera.position.y = param['cameraY'];
+	//camera.position.z = param['cameraZ'];
+	
+	camera.position = player.getPosition();
 	
 	// Look at the custom object I made!
-	this.camera.lookAt( this.player.getPosition() );
+	this.camera.lookAt( new THREE.Vector3(0,0,0) );
 		
 	// Find time now.
 	current = new Date();
@@ -242,10 +244,6 @@ function gameLoop(){
 	deltaTime = current.getTime() - last.getTime();
 	// reset the last time to time this frame for the next.
 	last = current;
-	
-	// Have a map of Kinnect maps with time for key.
-	// Sort them each frame by time relevance and use the top.
-	// This acts as a queue for a players kinect data.
 	
 	if( kinect ){
 		//Get the kinect data.
@@ -531,6 +529,40 @@ function randomRange(min, max) {
 
 
 
+/**=================================handle Key Events()=====================================
+
+========================================================================*/
+function handleKeyEvents( event ) {
+	
+	var key = event.keyCode;
+	
+	switch( key ){
+		
+		case 38:
+	  		// Move up
+			player.move( 5 );
+	  		break;
+		case 40:
+	  		// Move Down
+			player.move( -5 );
+	  		break;
+		case 37:
+	  		// Move Left
+			//player.move( 5 );
+	  		break;
+		case 39:
+	  		// Move Right
+			//player.move( 5 );
+	  		break;
+		default:
+	  		return;
+	}
+	
+}
+
+
+
+
 /**==================================RESIZE()==========================================
 
 	Helper function for resizing the display
@@ -553,6 +585,8 @@ function resize(){
 
 window.addEventListener('resize', resize, false);
 window.addEventListener('orientationchange', resize, false);
+//window.addEventListener( 'mousemove', handleMouseEvents, false );
+window.addEventListener( 'keydown', handleKeyEvents, false );
 // Tell me when the window loads!
 window.onload = load;
 

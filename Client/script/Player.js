@@ -46,6 +46,9 @@ function Player( name, id, meshUrl, position){
 	this._walkSpeed = 5;
 	// The direction of the player.
 	this._direction = new THREE.Vector3(0,0,0);
+	// Something nice to look at.
+	this._sightNode = new THREE.Vector3(0,0,0);
+	
 };
 
 
@@ -124,9 +127,9 @@ Player.prototype.setPosition = function( pos ){
 */
 Player.prototype.getPosition = function(  ){
 
-	//return ( this._position );
+	return ( this._position );
 	
-	return this._rig.getPosition();
+	//return this._rig.getPosition();
 };
 
 
@@ -149,7 +152,17 @@ Player.prototype.rotate = function( pos ){
 
 
 
-/**	@name LOAD MODEL MESH( path to model file )
+
+Player.prototype.move = function( pos ){
+
+	this._position.x += pos;
+};
+
+
+
+
+
+/**	@name LOAD MODEL MESH( )
 
 	@brief
 	Load a model from file specified.
@@ -161,8 +174,10 @@ Player.prototype.rotate = function( pos ){
 	N/A
 */
 Player.prototype.loadModelMesh = function( url ){
+	
 	var that = this;
 	new THREE.ColladaLoader().load( url ,function( collada ){
+		
 		that._model = collada;
 		//model.scale.set(0.1,0.1,0.1);
 		that._model.scene.rotation.x = -Math.PI/2;
