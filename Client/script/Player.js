@@ -152,12 +152,30 @@ Player.prototype.rotate = function( pos ){
 
 
 
+/**	@Name: MOVE
 
+	@Brief:When the player moves it should move the model.
+	The joint data and its own position also.
+	
+	@Arguments: Vector3 pos
+	A vector to translate the current position to.
+	
+	@Returns:
+	N/A
+*/
 Player.prototype.move = function( pos ){
 
-	this._position.x += pos;
+	this._position.addSelf( pos );
+	this._rig.update( this._position );
+	this._sightNode = this._rig.getPosition();
 };
 
+
+
+Player.prototype.getSightNode = function( ) {
+
+	return ( this._sightNode );
+};
 
 
 

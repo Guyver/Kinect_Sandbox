@@ -229,14 +229,16 @@ function gameLoop(){
 	
 	
 	// Set the camera Z to the gui for debugging!
-	//camera.position.x = param['cameraX'];
-	//camera.position.y = param['cameraY'];
-	//camera.position.z = param['cameraZ'];
+	/*camera.position.x = param['cameraX'];
+	camera.position.y = param['cameraY'];
+	camera.position.z = param['cameraZ'];
+	*/
 	
-	camera.position = player.getPosition();
-	
-	// Look at the custom object I made!
-	this.camera.lookAt( new THREE.Vector3(0,0,0) );
+	// Camera Follows the player.
+	camera.position.x = player.getPosition().x;
+	camera.position.y = player.getPosition().y + 1000;
+	camera.position.z = player.getPosition().z - 1000; 
+
 		
 	// Find time now.
 	current = new Date();
@@ -253,10 +255,15 @@ function gameLoop(){
 	
 	try{
 	
-		if( kinectMap['HEAD'] != undefined){
+		if( kinect ){
+		
 			syncKinect();
-			// Look at the custom object I made!
-			this.camera.lookAt( this.player.getPosition() );
+			// Look at the Player.
+			this.camera.lookAt( player.getSightNode() );
+		}
+		else{
+				// Look at the custom object I made!
+				this.camera.lookAt( player.getSightNode() );
 		}
 	}catch( err ){
 		
@@ -336,19 +343,19 @@ function setupGui(){
 	
 	 /* Add the paramater values to the GUI, give it a name, set the min and max values 
 		inside the clip plane upon change specify the callback function*/
-	 gui.add( param, 'cameraX').name('Camera.X').min(( farClip / 20 ) * -1).max(farClip/20).step(100).onFinishChange(function(){
+	 gui.add( param, 'cameraX').name('Camera.X').min(( farClip  ) * -1).max(farClip).step(1000).onFinishChange(function(){
 		
 		
 	});
 	
 	 // Add the paramater values to the GUI, give it a name, upon change specify the callback function
-	 gui.add( param, 'cameraY').name('Camera.Y').min(( farClip / 20) * -1).max(farClip/20).step(100).onFinishChange(function(){
+	 gui.add( param, 'cameraY').name('Camera.Y').min(( farClip ) * -1).max(farClip).step(1000).onFinishChange(function(){
 		
 		
 	});
 	
 	 // Add the paramater values to the GUI, give it a name, upon change specify the callback function
-	 gui.add( param, 'cameraZ').name('Camera.Z').min(( farClip / 20) * -1).max(farClip/20).step(100).onFinishChange(function(){
+	 gui.add( param, 'cameraZ').name('Camera.Z').min(( farClip ) * -1).max(farClip).step(1000).onFinishChange(function(){
 		
 		
 	});
@@ -429,7 +436,7 @@ function Skybox(){
  
  
  
- /**================================Example Code()=================================
+/**================================Example Code()=================================
 
 	Code snippets and testing goes in here while developing.
 	
@@ -495,6 +502,8 @@ function Skybox(){
  }
 
 
+ 
+ 
 /**=================================SYNC KINECT()=============================================
 
 	Syncronise the model with the Kinect data we've got from openNi
@@ -540,19 +549,19 @@ function handleKeyEvents( event ) {
 		
 		case 38:
 	  		// Move up
-			player.move( 5 );
+			player.move( new THREE.Vector3( 100,0,0 ) );
 	  		break;
 		case 40:
 	  		// Move Down
-			player.move( -5 );
+			player.move( new THREE.Vector3( -100,0,0 ) );
 	  		break;
 		case 37:
 	  		// Move Left
-			//player.move( 5 );
+			player.move( new THREE.Vector3( 0,0,100 ) );
 	  		break;
 		case 39:
 	  		// Move Right
-			//player.move( 5 );
+			player.move( new THREE.Vector3( 0,0,-100 ) );
 	  		break;
 		default:
 	  		return;

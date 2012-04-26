@@ -11,9 +11,12 @@
 
 function Model( jointNames ){
 
-	this._joint = {};				// Map of joint objects.
+	this._joint = {};				        // Map of joint objects.
 	this._jointNames = jointNames;			// Array of key values for the kinect data.
 		
+	// Initalise the kinectMap.
+	kinectMap = this._joint;
+	
 	// Construct all the joints.
 	for( var i = 0; i < this._jointNames.length; i++){
 	
@@ -57,7 +60,7 @@ Model.prototype.setAllJoints = function( map ){
 	// Cycle through the joints and set the according to the map.
 	for (var i =0; i < this._jointNames.length; i++){
 	
-		this._joint[ this._jointNames[ i ] ].setPosition( map[this._jointNames[ i ]] );
+		this._joint[ this._jointNames[ i ] ].setPosition( map[ this._jointNames[ i ] ] );
 	}
 }
 
@@ -73,14 +76,44 @@ Model.prototype.setAllJoints = function( map ){
 */
 Model.prototype.getPosition = function(  ){
 
-	// A center of mass of the Player.
-	if ( kinectMap['HEAD'] != undefined	 ){
-	
-		return ( this._joint[ 'TORSO' ].getPosition() );
-	}
-	else{
+	 return ( this._joint[ 'TORSO' ].getPosition() );
 		
-		return ( new THREE.Vector3( 0,0,0) );
-	}
 	
+};
+
+
+
+/**	@Name: UPDATE
+
+	@Brief: Update the vector positions of the skeleton of the player.
+	The raw kinect data is a vector position from the actual device-
+	but we want to translate it so that it corresponds to the player-
+	object position.
+	
+	@Arguments: Vector3 playerPos
+	The cartesian position of the player.
+	
+	@Returns:
+	N/A
+
+*/
+Model.prototype.update = function( playerPos ){
+	
+	// Move all the joint starting from an offset of the player.
+	var posFromPlayer = new THREE.Vector3(0,0,0);
+	var kinectSpacePos= new THREE.Vector3(0,0,0);
+	
+	// Construct all the joints.
+	for( var i = 0; i < this._jointNames.length; i++){
+		
+		// Store the joint pos in the kinect space.
+		kinectSpacePos = kinectMap[ this._jointNames[ i ] ];
+		
+		// Add the kinect pos to the player pos and assign to posFrom player.
+		posFromPlayer.add( playerPos, kinectSpacePos.getPosition() );
+		
+		// Assign the position in the game space to its corresponding joint.
+		this._joint[ this._jointNames[ i ] ].setPosition( posFromPlayer );
+		
+	}//End for	
 }

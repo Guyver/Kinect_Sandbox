@@ -103,6 +103,7 @@ Joint.prototype.setMesh = function(  ){
 };
 
 
+
 /*
 	@Brief:
 	Get the position of the Joint.
@@ -117,12 +118,18 @@ Joint.prototype.getPosition = function(  ){
 	
 };
 
-/*
+
+
+/**	@Name:
+	
 	@Brief:
 	Set the position of the Joint using the arguments.
 	
 	@Arguments:
 	position: The position to set the joint...
+	
+	@Returns:
+	N/A
 
 */
 Joint.prototype.setPosition = function( position ){
