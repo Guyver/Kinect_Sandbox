@@ -152,7 +152,7 @@ function loadResources(){
 	imageManager.queueDownload( 'img/Reaching.png' );
 	imageManager.queueDownload( 'img/Right_Arm_Raised.png' );
 	imageManager.queueDownload( 'img/ground_plane.png' );
-	
+	imageManager.queueDownload( 'img/floor.png' );
 	imageManager.downloadAll( onImagesComplete );
 
 }

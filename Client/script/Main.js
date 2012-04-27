@@ -1,12 +1,11 @@
-/**=========================================================================
+/**	@Name:	Main
 
 	@Author: James Browne
 	
 	@Brief:
-	This is where the magic happens. The entry point, kind of.
-	The game logic is carried out here after initalising the game.
-	
-=========================================================================*/
+	Where the game logic is controlled.
+
+*/
 
 
 // Variables for the sugary goodness!
@@ -37,10 +36,11 @@ var imgContainer;
 var test;
 
 
-/**====================================INIT()==========================================
-
-	Initalise some variables needed for start up.
-//========================================================================*/
+/**	@Name:	Init
+	@Brief:	Initalise objects we need.
+	@Arguments:N/A
+	@Returns:N/A
+*/
 function init(){
 	
 	// Loop until the image manager is finished loading.
@@ -84,11 +84,11 @@ function init(){
 
 
 
-/**================================INIT CAMERA()==========================
-
-	Initalise our Three camera.
-
-========================================================================*/
+/**	@Name:	Init Camera
+	@Brief:	Initalise camera objects we need.
+	@Arguments:N/A
+	@Returns:N/A
+*/
 function initCamera(){
 	
 	
@@ -107,11 +107,11 @@ function initCamera(){
 
 
 
-/**================================INIT SCENE()========================================
-
-	Initalise the scene that will contain all the game data.
-
-========================================================================*/
+/**	@Name:	Init Scene
+	@Brief:	Initalise the Three.js Scene
+	@Arguments:N/A
+	@Returns:N/A
+*/
 function initScene(){
 	
 	// the scene contains all the 3D object data
@@ -121,12 +121,11 @@ function initScene(){
 
 
 
-/**===============================INIT RENDERER()======================================
-
-	Set up the renderer that will decide render what is in the view frustrum.
-	This will be a CANVAS renderer, not webgl. For the test at least.
-
-========================================================================*/
+/**	@Name:	Init Render
+	@Brief:	Initalise the renderer and add it to the Html page.
+	@Arguments:N/A
+	@Returns:N/A
+*/
 function initRenderer(){
 	
 	/*renderer = new THREE.CanvasRenderer();*/
@@ -151,11 +150,11 @@ function initRenderer(){
 
 
 
-/**===============================SETUP LIGHTS()=======================================
-
-	Let there be light!
-
-//========================================================================*/
+/**	@Name:	Setup Lights
+	@Brief:	Initalise lights we need.
+	@Arguments:N/A
+	@Returns:N/A
+*/
 function setupLights(){
 	
 	// Ambient
@@ -185,10 +184,11 @@ function setupLights(){
 
 
 
-/**===============================CREATE OBJECTS()=====================================
-
-	Set up stuff! Args: Name, Position (vector3), Mesh (Three.Mesh)
-========================================================================*/
+/**	@Name:	Create Objects.
+	@Brief:	Create the games objects like the Player.
+	@Arguments:N/A
+	@Returns:N/A
+*/
 function createObjects(){
 	
 
@@ -214,20 +214,17 @@ function createObjects(){
 
 
 
-/**===============================GAME LOOP()==========================================
-
-	This is the main game loop. Where all the magic happens if you will.
-	I'm calculating delta time here to use for Newtonian Mechanics. :D
-
-//========================================================================*/
+/**	@Name:	Game Loop
+	@Brief:	This is the loop we call per frame to update the game.
+	@Arguments:N/A
+	@Returns:N/A
+*/
 function gameLoop(){
 	
 	// Initalise last for the 1st iteration.
 	if(!last)	{
 		last= new Date();
-	}
-	
-	
+	}	
 	// Set the camera Z to the gui for debugging!
 	/*camera.position.x = param['cameraX'];
 	camera.position.y = param['cameraY'];
@@ -236,10 +233,9 @@ function gameLoop(){
 	
 	// Camera Follows the player.
 	camera.position.x = player.getPosition().x;
-	camera.position.y = player.getPosition().y + 1000;
-	camera.position.z = player.getPosition().z - 1000; 
+	camera.position.y = player.getPosition().y + 500;
+	camera.position.z = player.getPosition().z - 500; 
 
-		
 	// Find time now.
 	current = new Date();
 	// Get the change in time, dt.
@@ -253,8 +249,11 @@ function gameLoop(){
 		console.log("Getting the kinect data from main");
 	}
 	
+	syncKinect();
+	// Look at the Player.
+	this.camera.lookAt( player.getSightNode() );
+	/*
 	try{
-	
 		if( kinect ){
 		
 			syncKinect();
@@ -271,19 +270,18 @@ function gameLoop(){
 		kinectMap.clear();
 		return;
 	}
-	
-		render();
-
+	*/
+	render();
 }
 
 
 
 
-/**================================RENDER()============================================
-	
-	Render some stuff to the html page.
-	
-========================================================================*/
+/**	@Name:	Render 
+	@Brief:	Draw the scene.
+	@Arguments:N/A
+	@Returns:N/A
+*/
 function render(){
 
 	var x = document.getElementById('string');
@@ -296,14 +294,11 @@ function render(){
 
 
 
-/**================================SETUP GUI()=========================================
-
-	Make the Gui do stuff, the callbacks for changable variables is in here. 
-	I did it like this so I can change the time step and watch at run time.
-	In effect you can edit at run time now using the GUI Paramaters :)
- 	Like a boss!
- 	
-========================================================================*/
+/**	@Name:	Setup Gui
+	@Brief:	Creates the GUI panel on screen and assigns variables to change at run time for debugging
+	@Arguments:N/A
+	@Returns:N/A
+*/
 function setupGui(){
 	
 	// The number of entries/spaces on the GUI
@@ -365,12 +360,11 @@ function setupGui(){
 
 
 
-/**================================SETUP ENVIORNMENT()=================================
-
-	Create a box around the origin for testing.
-	Will be a nice sandbox to play with our model.
-	
-========================================================================*/
+/**	@Name:	Setup Enviornment 
+	@Brief:	Initalise terrain and game art.
+	@Arguments:N/A
+	@Returns:N/A
+*/
 function setupEnviornment(){
 
 	//
@@ -382,9 +376,12 @@ function setupEnviornment(){
 	// Create Plane
 	//
 	
-	var planeTex = new THREE.Texture(imageManager.getAsset('img/ground_plane.png', {}, render()));
+	var planeTex = new THREE.Texture(imageManager.getAsset('img/floor.png', {}, render()));
 	
 	planeTex.needsUpdate = true;
+	planeTex.wrapT = THREE.RepeatWrapping;
+	planeTex.wrapS = THREE.RepeatWrapping;
+	planeTex.repeat.set( 100, 100 );
 	
 	var planeGeo = new THREE.PlaneGeometry(100000, 100000, 1, 10);
 	
@@ -403,17 +400,17 @@ function setupEnviornment(){
 
 
 
-/**================================SKY BOX()=================================
-
-	Create a sky box from 6 images, one for each +ve and -ve axis.
-	
-========================================================================*/
+/**	@Name:	Skybox
+	@Brief:	Create the skybox
+	@Arguments:N/A
+	@Returns:N/A
+*/
 function Skybox(){
  	
 	var urlPrefix	= "img/";
-	var urls = [ urlPrefix + "target_red.png", urlPrefix + "target_red.png",
-			urlPrefix + "target_green.png", urlPrefix + "target_green.png",
-			urlPrefix + "target_blue.png", urlPrefix + "target_blue.png" ];
+	var urls = [ urlPrefix + "x.png", urlPrefix + "-x.png",
+			urlPrefix + "y.png", urlPrefix + "-y.png",
+			urlPrefix + "z.png", urlPrefix + "-z.png" ];
 	var textureCube	= THREE.ImageUtils.loadTextureCube( urls );
 	textureCube.needsUpdate = true;
 	
@@ -436,11 +433,11 @@ function Skybox(){
  
  
  
-/**================================Example Code()=================================
-
-	Code snippets and testing goes in here while developing.
-	
-========================================================================*/
+/**	@Name:	Example code
+	@Brief:	Code snippets that I used for testing.
+	@Arguments:N/A
+	@Returns:N/A
+*/
  function ExampleCode(){
  	
 	//
@@ -504,10 +501,11 @@ function Skybox(){
 
  
  
-/**=================================SYNC KINECT()=============================================
-
-	Syncronise the model with the Kinect data we've got from openNi
-========================================================================*/
+/**	@Name:	Sync Kinect
+	@Brief:	Syncronise the users kinect data with the player object in game.
+	@Arguments:N/A
+	@Returns:N/A
+*/
 function syncKinect() {  
 	
 	player.syncJoints( kinectMap );
@@ -516,10 +514,11 @@ function syncKinect() {
 
 
 
-/**=================================LOAD()=============================================
-
-	Fired whenis called when the window loads!
-========================================================================*/
+/**	@Name:	Load
+	@Brief:	Called when the window loads
+	@Arguments:N/A
+	@Returns:N/A
+*/
 function load() {  
 	init(); 
 }  
@@ -527,10 +526,11 @@ function load() {
 
 
 
-/**=================================RANDOM RANGE()=====================================
-
-	Helper function for random numbers
-========================================================================*/
+/**	@Name:	Random Range
+	@Brief:	A helper function to get a value between the arguments.
+	@Arguments: int min, int max
+	@Returns: int random value
+*/
 function randomRange(min, max) {
 	return Math.random()*(max-min) + min;
 }
@@ -538,9 +538,11 @@ function randomRange(min, max) {
 
 
 
-/**=================================handle Key Events()=====================================
-
-========================================================================*/
+/**	@Name:	Handle Key Events
+	@Brief:	Called from the dom's mouse down event listener
+	@Arguments: event object
+	@Returns:N/A
+*/
 function handleKeyEvents( event ) {
 	
 	var key = event.keyCode;
@@ -572,10 +574,11 @@ function handleKeyEvents( event ) {
 
 
 
-/**==================================RESIZE()==========================================
-
-	Helper function for resizing the display
-========================================================================*/
+/**	@Name:	Resize
+	@Brief:	Called from the dom's resize listener.
+	@Arguments:N/A
+	@Returns:N/A
+*/
 function resize(){
     
 	camera.aspect = window.innerWidth / window.innerHeight;

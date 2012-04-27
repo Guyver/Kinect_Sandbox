@@ -1,9 +1,8 @@
-/**	@name Player.js
+/**	@Name:	Player Class
+
 	@Author: James Browne
 	
-	@Description:
-	The user's class. This will hold all the data relevant to the player.
-	
+	@Brief:
 
 */
 
@@ -90,7 +89,8 @@ Player.prototype.update = function( dt ){
 */
 Player.prototype.syncJoints = function( jointMap ){
 
-	this._rig.setAllJoints( jointMap );
+	this._rig.setAllJoints( jointMap, this._position );
+	
 };
 
 
@@ -165,18 +165,34 @@ Player.prototype.rotate = function( pos ){
 */
 Player.prototype.move = function( pos ){
 
+	// Update player position.
 	this._position.addSelf( pos );
-	this._rig.update( this._position );
+	//Update the player's model position.
+	//this._model.mesh.position = this._position;
+	// Update the player's bone position.
+	//this._rig.update( this._position );
+	// Update the player's sight node.
 	this._sightNode = this._rig.getPosition();
 };
 
 
 
+/**	@Name:	Get Sight Node
+	
+	@Brief:
+	A model that represents all the joint data from the kinect.
+	Upon creation there will be 15 joints.
+	After construction the individual joints data will be passed as a map.
+	
+	@Arguments: N/A
+	
+	@Returns: Vector3 sight node position
+
+*/
 Player.prototype.getSightNode = function( ) {
 
 	return ( this._sightNode );
 };
-
 
 
 
@@ -197,7 +213,8 @@ Player.prototype.loadModelMesh = function( url ){
 	new THREE.ColladaLoader().load( url ,function( collada ){
 		
 		that._model = collada;
-		//model.scale.set(0.1,0.1,0.1);
+		model.scale.set(0.1,0.1,0.1);
+		that._model.position = that._position;
 		that._model.scene.rotation.x = -Math.PI/2;
 		scene.add( that._model.scene );
 	});

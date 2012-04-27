@@ -1,4 +1,4 @@
-/**
+/**	@Name:	Model Class
 
 	@Author: James Browne
 	
@@ -8,14 +8,11 @@
 	After construction the individual joints data will be passed as a map.
 
 */
-
 function Model( jointNames ){
 
 	this._joint = {};				        // Map of joint objects.
 	this._jointNames = jointNames;			// Array of key values for the kinect data.
-		
-	// Initalise the kinectMap.
-	kinectMap = this._joint;
+	this._dummyMap = {}
 	
 	// Construct all the joints.
 	for( var i = 0; i < this._jointNames.length; i++){
@@ -24,8 +21,10 @@ function Model( jointNames ){
 		
 		// Give it a random position.
 		this._joint[ this._jointNames[ i ] ].setPosition(  new THREE.Vector3( 
-		Math.floor((Math.random()*1000)), Math.floor((Math.random()*1000)), Math.floor((Math.random()*1000))
+			Math.floor((Math.random()*1000)), Math.floor((Math.random()*1000)), Math.floor((Math.random()*1000))
 		));
+		
+		this._dummyMap[ this._jointNames[ i ] ] = this._joint[ this._jointNames[ i ] ].getPosition()
 		
 	}//End for
 }
@@ -33,11 +32,13 @@ function Model( jointNames ){
 
 
 
+/**	@Name:
 
-/*
 	@Brief:
 	
 	@Arguments:
+	
+	@Returns:
 
 */
 Model.prototype.setJointPosition = function( name, pos ){
@@ -49,37 +50,54 @@ Model.prototype.setJointPosition = function( name, pos ){
 
 
 
-/*
-	@Brief:
-	
+/**	@Name:
+	@Brief:	
 	@Arguments:
+	@Returns:
 
 */
-Model.prototype.setAllJoints = function( map ){
+Model.prototype.setAllJoints = function( map, playerPos ){
 
+	//Take a reference to the model.
+	var that = this;
+	
+	//The position in kinect space.
+	var kinectPos = new THREE.Vector3(0,0,0);
+	// The position in game space.
+	var translatedPos = new THREE.Vector3( 0,0,0 );
+	
 	// Cycle through the joints and set the according to the map.
 	for (var i =0; i < this._jointNames.length; i++){
 	
-		this._joint[ this._jointNames[ i ] ].setPosition( map[ this._jointNames[ i ] ] );
-	}
-}
-
-
-
-
-
-/*
-	@Brief:
+		kinectPos = that._dummyMap[ that._jointNames[ i ] ];
+		 
+		 // This is the offending line bruv...
+		 translatedPos.add(  playerPos, kinectPos );
+		 
+		 
+		that._joint[ that._jointNames[ i ] ].setPosition(  translatedPos  );
+		
+	}// End for
 	
+}//End set all Joints
+
+
+
+
+
+/**	@Name:
+	@Brief:	
 	@Arguments:
+	@Returns:
 
 */
 Model.prototype.getPosition = function(  ){
 
 	 return ( this._joint[ 'TORSO' ].getPosition() );
-		
-	
+			
 };
+
+
 
 
 
