@@ -58,9 +58,6 @@ Model.prototype.setJointPosition = function( name, pos ){
 */
 Model.prototype.setAllJoints = function( map, playerPos ){
 
-	//Take a reference to the model.
-	var that = this;
-	
 	//The position in kinect space.
 	var kinectPos = new THREE.Vector3(0,0,0);
 	// The position in game space.
@@ -69,13 +66,12 @@ Model.prototype.setAllJoints = function( map, playerPos ){
 	// Cycle through the joints and set the according to the map.
 	for (var i =0; i < this._jointNames.length; i++){
 	
-		kinectPos = that._dummyMap[ that._jointNames[ i ] ];
+		kinectPos = this._dummyMap[ this._jointNames[ i ] ];
 		 
-		 // This is the offending line bruv...
-		 translatedPos.add(  playerPos, kinectPos );
-		 
-		 
-		that._joint[ that._jointNames[ i ] ].setPosition(  translatedPos  );
+		translatedPos.add(  playerPos, kinectPos );
+		  
+		this._joint[ this._jointNames[ i ] ].setPosition(  
+			new THREE.Vector3( translatedPos.x, translatedPos.y, translatedPos.z ) );
 		
 	}// End for
 	

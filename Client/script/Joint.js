@@ -134,13 +134,5 @@ Joint.prototype.getPosition = function(  ){
 */
 Joint.prototype.setPosition = function( position ){
 
-	var x = position.x
-	var y = position.y
-	var z = position.z
-
-	// The mesh hold the properties, not the joint class.
-	this._mesh.position.x = x;
-	this._mesh.position.y = y;
-	this._mesh.position.z = z;
-	
+	this._mesh.position =  position;
 };
