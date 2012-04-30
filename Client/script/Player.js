@@ -42,11 +42,12 @@ function Player( name, id, meshUrl, position){
 	// The acceleration...
 	this._accel = new THREE.Vector3(0,-9.81,0);
 	// The walkspeed, could replace velocity.
-	this._walkSpeed = 5;
+	this._walkSpeed = 50;
 	// The direction of the player.
 	this._direction = new THREE.Vector3(0,0,0);
-	// Something nice to look at.
-	this._sightNode = new THREE.Vector3(0,0,0);
+	// Move 100 units in the z direction, this is the players orientation.
+	this._sightNode = new THREE.Vector3(0,0,100);
+	this._upAxis = new THREE.Vector3( 0,0,1 );
 	
 };
 
@@ -164,16 +165,20 @@ Player.prototype.rotate = function( pos ){
 	@Returns:
 	N/A
 */
-Player.prototype.move = function( pos ){
+Player.prototype.move = function( direction ){
 
+	// Move in the direction of the sight node.
+	var dir = new THREE.Vector3( this._sightNode.x - this._position.x, this._position.y, this._sightNode.z- this._position.z );
+	dir.normalize();
+	
+	this._position.addSelf( dir.multiplyScalar( direction * this._walkSpeed ) );
+	this._sightNode.addSelf( dir.multiplyScalar( direction * this._walkSpeed ) );
+	/*
 	// Update player position.
 	this._position.addSelf( pos );
-	//Update the player's model position.
-	//this._model.mesh.position = this._position;
-	// Update the player's bone position.
-	//this._rig.update( this._position );
-	// Update the player's sight node.
-	this._sightNode = this._rig.getPosition();
+	// Keep the sight node in sync.
+	this._sightNode.addSelf( pos );
+	*/
 };
 
 
@@ -195,6 +200,132 @@ Player.prototype.getSightNode = function( ) {
 	return ( this._sightNode );
 };
 
+
+/**	@Name:	Rotate Left
+	
+	@Brief:
+
+	
+	@Arguments: N/A
+	
+	@Returns: 
+
+*/
+Player.prototype.rotateLeft = function( ) {
+
+	theta = 0.1;
+	// Translate...sight - player pos
+	this._sightNode.subSelf( this._position );
+	
+	// Rotate up and down
+	this._sightNode.x = this._sightNode.x * Math.cos( theta ) + Math.sin( theta ) * this._sightNode.z; 
+	this._sightNode.z = this._sightNode.z * Math.cos( theta ) - Math.sin( theta ) * this._sightNode.x 
+	
+	// Translate...sight + playerPos
+	this._sightNode.addSelf( this._position );
+};
+
+
+/**	@Name:	Rotate Right
+	
+	@Brief:
+
+	
+	@Arguments: N/A
+	
+	@Returns: 
+
+*/
+Player.prototype.rotateRight = function( ) {
+
+	theta = -0.1;
+	// Translate...sight - player pos
+	this._sightNode.subSelf( this._position );
+	
+	// Rotate up and down
+	this._sightNode.x = this._sightNode.x * Math.cos( theta ) + Math.sin( theta ) * this._sightNode.z; 
+	this._sightNode.z = this._sightNode.z * Math.cos( theta ) - Math.sin( theta ) * this._sightNode.x 
+	
+	// Translate...sight + playerPos
+	this._sightNode.addSelf( this._position );
+};
+
+
+/**	@Name:	Rotate Up
+	
+	@Brief:
+
+	
+	@Arguments: N/A
+	
+	@Returns: 
+
+*/
+Player.prototype.rotateUp = function( ) {
+
+	theta = 0.1;
+	// Translate...sight - player pos
+	this._sightNode.subSelf( this._position );
+	
+	// Rotate up and down
+	this._sightNode.x = this._sightNode.x * Math.cos( theta ) + Math.sin( theta ) * this._sightNode.y; 
+	this._sightNode.y = this._sightNode.y * Math.cos( theta ) - Math.sin( theta ) * this._sightNode.x 
+	
+	// Translate...sight + playerPos
+	this._sightNode.addSelf( this._position );
+};
+
+
+
+/**	@Name:	Rotate Down
+	
+	@Brief:
+
+	
+	@Arguments: N/A
+	
+	@Returns: 
+
+*/
+Player.prototype.rotateDown = function( ) {
+
+	theta = -0.1;
+	// Translate...sight - player pos
+	this._sightNode.subSelf( this._position );
+	
+	// Rotate up and down
+	this._sightNode.x = this._sightNode.x * Math.cos( theta ) + Math.sin( theta ) * this._sightNode.y; 
+	this._sightNode.y = this._sightNode.y * Math.cos( theta ) - Math.sin( theta ) * this._sightNode.x  
+	
+	// Translate...sight + playerPos
+	this._sightNode.addSelf( this._position );
+};
+
+
+/**	@Name:	Set Sight Node
+	
+	@Brief:
+	Set the position of the sight node.
+	
+	@Arguments: angle
+	
+	@Returns: N/A
+
+*/
+Player.prototype.setSightNode = function( theta ) {
+	
+	// Translate...sight - player pos
+	this._sightNode.subSelf( this._position );
+	
+	// Rotate up and down
+	this._sightNode.x = this._sightNode.x * Math.cos( theta ) + Math.sin( theta ) * this._sightNode.z; 
+	this._sightNode.z = this._sightNode.z * Math.cos( theta ) - Math.sin( theta ) * this._sightNode.x 
+	
+	// Translate...sight + playerPos
+	this._sightNode.addSelf( this._position );
+	
+
+};
 
 
 /**	@name LOAD MODEL MESH( )

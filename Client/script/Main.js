@@ -32,6 +32,8 @@ var deltaTime, last, current;
 
 var imgContainer;
 
+var architect;
+
 // Debugging Variable.
 var test;
 
@@ -115,7 +117,7 @@ function initCamera(){
 function initScene(){
 	
 	// the scene contains all the 3D object data
-	scene = new THREE.Scene();
+	scene = new THREE.Scene();	
 }
 
 
@@ -210,6 +212,21 @@ function createObjects(){
 				
 		player = new Player( 'James', 42, "", new THREE.Vector3( 100,100,100) );//'model/monster.dae'
 		
+			
+	var my_scene = {
+				"map" : [
+					"######################",
+					"#    #    #     #    #",
+					"#    #    #     #    #",
+					"#                    #",
+					"#    #    #     #    #",
+					"#    #    #     #    #",
+					"######################"
+				] 
+			};
+			
+	architect = new Scene_Builder( my_scene );
+		
 }
 
 
@@ -225,16 +242,20 @@ function gameLoop(){
 	if(!last)	{
 		last= new Date();
 	}	
+	
+	/*
 	// Set the camera Z to the gui for debugging!
-	/*camera.position.x = param['cameraX'];
+	camera.position.x = param['cameraX'];
 	camera.position.y = param['cameraY'];
 	camera.position.z = param['cameraZ'];
 	*/
 	
 	// Camera Follows the player.
+	
 	camera.position.x = player.getPosition().x;
-	camera.position.y = player.getPosition().y + 500;
-	camera.position.z = player.getPosition().z - 500; 
+	camera.position.y = player.getPosition().y;
+	camera.position.z = player.getPosition().z;
+	
 
 	// Find time now.
 	current = new Date();
@@ -334,19 +355,19 @@ function setupGui(){
 	
 	 /* Add the paramater values to the GUI, give it a name, set the min and max values 
 		inside the clip plane upon change specify the callback function*/
-	 gui.add( param, 'cameraX').name('Camera.X').min(( farClip  ) * -1).max(farClip).step(1000).onFinishChange(function(){
+	 gui.add( param, 'cameraX').name('Camera.X').min(( farClip  ) * -1).max(farClip).step(100).onFinishChange(function(){
 		
 		
 	});
 	
 	 // Add the paramater values to the GUI, give it a name, upon change specify the callback function
-	 gui.add( param, 'cameraY').name('Camera.Y').min(( farClip ) * -1).max(farClip).step(1000).onFinishChange(function(){
+	 gui.add( param, 'cameraY').name('Camera.Y').min(( farClip ) * -1).max(farClip).step(100).onFinishChange(function(){
 		
 		
 	});
 	
 	 // Add the paramater values to the GUI, give it a name, upon change specify the callback function
-	 gui.add( param, 'cameraZ').name('Camera.Z').min(( farClip ) * -1).max(farClip).step(1000).onFinishChange(function(){
+	 gui.add( param, 'cameraZ').name('Camera.Z').min(( farClip ) * -1).max(farClip).step(100).onFinishChange(function(){
 		
 		
 	});
@@ -546,20 +567,36 @@ function handleKeyEvents( event ) {
 	switch( key ){
 		
 		case 38:
-	  		// Move up
-			player.move( new THREE.Vector3( 100,0,0 ) );
+	  		// Move Forward
+			player.move( +1 );
 	  		break;
 		case 40:
-	  		// Move Down
-			player.move( new THREE.Vector3( -100,0,0 ) );
+	  		// Move Back
+			player.move( -1 );
 	  		break;
 		case 37:
 	  		// Move Left
-			player.move( new THREE.Vector3( 0,0,100 ) );
+			//player.move( new THREE.Vector3( 0,0,100 ) );
 	  		break;
 		case 39:
 	  		// Move Right
-			player.move( new THREE.Vector3( 0,0,-100 ) );
+			//player.move( new THREE.Vector3( 0,0,-100 ) );
+	  		break;
+		case 65:
+	  		// Rotate Left
+			player.rotateLeft();
+	  		break;
+		case 68:
+	  		// Rotate Right
+			player.rotateRight();
+	  		break;
+		case 87:
+	  		// Rotate up
+			player.rotateUp();
+	  		break;
+		case 83:
+	  		// Rotate Down
+			player.rotateDown();
 	  		break;
 		default:
 	  		return;
