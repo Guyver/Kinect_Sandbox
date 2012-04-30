@@ -89,7 +89,8 @@ Player.prototype.update = function( dt ){
 */
 Player.prototype.syncJoints = function( jointMap ){
 
-	this._rig.setAllJoints( jointMap, this._position );
+	 var newPosition = this._rig.setAllJoints( jointMap, this._position );
+	 this._position = newPosition;
 	
 };
 

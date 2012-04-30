@@ -249,20 +249,14 @@ function gameLoop(){
 		console.log("Getting the kinect data from main");
 	}
 	
-	syncKinect();
-	// Look at the Player.
-	this.camera.lookAt( player.getSightNode() );
-	/*
 	try{
+	
 		if( kinect ){
 		
 			syncKinect();
-			// Look at the Player.
-			this.camera.lookAt( player.getSightNode() );
 		}
 		else{
-				// Look at the custom object I made!
-				this.camera.lookAt( player.getSightNode() );
+		
 		}
 	}catch( err ){
 		
@@ -270,7 +264,9 @@ function gameLoop(){
 		kinectMap.clear();
 		return;
 	}
-	*/
+	
+	// Look at the Player.
+	this.camera.lookAt( player.getSightNode() );
 	render();
 }
 
@@ -538,9 +534,9 @@ function randomRange(min, max) {
 
 
 
-/**	@Name:	Handle Key Events
-	@Brief:	Called from the dom's mouse down event listener
-	@Arguments: event object
+/**	@Name:	Handle Key Events.
+	@Brief:	Called from the dom's mouse down event listener.
+	@Arguments: event object.
 	@Returns:N/A
 */
 function handleKeyEvents( event ) {
