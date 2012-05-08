@@ -1,23 +1,3 @@
-/**
-	@Author: James Browne.
-	
-	@Brief: 
-	This was designed to recieve kinect data from and OpenNi interface and to staore it.
-	Ze client can conect then and request it per frame to draw the user in the browser.
-	
-	...neat ain't it.
-	
-	CONNECTS TO: Browser, Java Web sockets.
-	
-*/
-
-/*======================================================
-
-	ACT 1: Server the client the game.
-
-========================================================*/
-
-
 // The port to listen for client connctions.
 var clientPort = 7541;
 // Http protocol 
@@ -27,12 +7,8 @@ var fs = require('fs');
 // Validates the existance of files.
 var path = require('path');
 // Sockets
-var io = require('./lib/socket.io');
-// A map containing a 3d vector for each joint.
-var kinectMap = {};				
+var io = require('./lib/socket.io');		
 
-
-//Server
 var server = http.createServer( function ( request , response ) {
  
     console.log('request starting...');
@@ -102,52 +78,125 @@ var server = http.createServer( function ( request , response ) {
 });// End of Http create server.
 
 var socket = io.listen( server ); 		// Socket IO server instance.
-var gClient;
+var users = [];							// List of connected players.
+var interfaces = [];
+var userCount = 0;						// Number of users connected.
+var map = [];
 
-// Add a connect listener
+/*		EXAMPLE USE
+	socket.sockets.emit('updatechat', client.username, message );		// Send to everyone, including me.
+	socket.sockets.send( 'updatechat', client.username, message );	    // Send to everyone but me.
+	client.emit('updatechat', "Please enter your user name to chat");	// Send to just me.
+	
+*/
 socket.sockets.on( 'connection', function( client ){
 	
-	// Store a global reference to the client connected.
-	if(gClient !== null ){
-		gClient = client;	
-	}
 	
-	
-	/*
-	    The browser calls this to retrieve the latest kinect data from the server.	
-	*/
-	client.on('kinect', function(  ){
+	//				(1)
+	// GET PLAYERS, SEND TO JUST ME.
+	//
+	client.on('getPlayers', function() {
 		
-		client.emit('passClientData', kinectMap);
-	});
+		// Why in gods name do I have to do this shit?
+		var test = {};
+		var count=0;
+		for ( index in users){
+			count++;
+			test[ count ] = users[ index ];
+		
+		}
 
-	/*
-		When the user disconnects.. perform this.
-	*/
+		client.emit( 'heresPlayersFromServer', test );// Whys is this null!?
+
+	});
+	
+	
+	// 				(2)
+	// STORE ME AS A USER, TELL EVERYONE INCLUDING ME COS I NEED MY IP.
+	//	
+	client.on('registerMeInServer', function( data ){
+		console.log("Register Me In Server was called on the server.");
+		
+		// Construct a map from the new player.
+		var map = { "name": "Bot",
+		"pos":data.pos,
+		"ip":client.handshake.address.address,
+		"kinect":undefined,
+		"id":undefined,
+		"meshName":undefined
+		};
+	
+		users[ client.handshake.address.address ] =  map ;	
+
+		client.emit( 'registerSelf', { player : users[ client.handshake.address.address ] } );
+		
+		socket.sockets.emit( 'RegisterNewUser', { player:users[ client.handshake.address.address ], ip:client.handshake.address.address }  );
+	});
+	
+	
+	// 				(3)
+	// UPDATE ME AND TELL EVERYONE BUT ME.
+	//
+	client.on( 'updateMe', function( me ) {
+	
+		console.log("Update me was called on the server.");
+		
+		if( users[ me.ip ] !== undefined){
+		
+			users[ me.ip ].pos = me.pos;
+			users[ me.ip ].kinect = me.kinect;
+		}
+		else
+		{
+			console.log( " Unregistered user "+ me.ip );return;		
+		}
+		
+		socket.sockets.send( 'updateHim', users[ me.ip] );
+		socket.sockets.emit( 'updateHim', users[ me.ip] );		// Send to everyone, including me.
+		socket.sockets.send( 'updateHim', users[ me.ip] );	    // Send to everyone but me.
+		client.emit( 'updateHim', users[ me.ip] );				// Send to just me.
+
+	});
+	
+	// 				(4)
+	// TELL EVERYONE I'M OFF AND DELETE ME.
+	//
 	client.on('disconnect', function(){
 		
 		console.log("User disconnected");
+		socket.sockets.emit( 'deleteHim', users[ client.handshake.address.address ] );		// Send to everyone, including me.
+		// Tell the users that some one has quit so tey can remve from their scenes.
+		delete users[ client.handshake.address.address ];
 	});
 	
+	client.on( 'test', function(){
+		
+		var test = {};
+		var count=0;
+		for ( index in users){
+			count++;
+			test[ count ] = users[ index ];
+		
+		}
+		socket.sockets.send( 'test', test );
+		socket.sockets.emit( 'test', test );		
+		socket.sockets.send( 'test', test );	  
+		client.emit( 'test', test );		
+	});
 
 });// End of 'onConnection'
 
 // Listen for connection
 server.listen( clientPort );
 
-/*===================================================
-	
-	ACT 2 : Connect to openNi and get the data.
 
-====================================================*/
 var javaPort = 7540;
 var javaServer = require('net').createServer();
 
 javaServer.on('listening', function () {
 
-    console.log('Server is listening on for java data on :' + javaPort);
+    console.log('Server is listening on for kinect data on :' + javaPort);
 });
-
 
 
 javaServer.on('error', function ( e ) {
@@ -155,43 +204,69 @@ javaServer.on('error', function ( e ) {
     console.log('Server error: ');// + e.code);
 });
 
-
-
 javaServer.on('close', function () {
 
     console.log('Server closed');
 });
 
-// Debugging variables.
-var packetCount = 0;
-var fullPackets = 0;
+
 var dataBuffer = "";
-var packetLength = 0;
 var newlineIndex = 0
 var kinectSynced = false;
 
+//
+// 
+//
 javaServer.on('connection', function ( javaSocket ) {
 	
     // Store the address of the java client.
     var clientAddress = javaSocket.address().address + ':' + javaSocket.address().port;
+	var interfaceIpAddress = javaSocket.address().address;
+	console.log("An interface connection was detected, "+ interfaceIpAddress );
+	interfaces[ interfaceIpAddress ] = {};
 	
-    // Log that a client has connected...
-    console.log('Java ' + clientAddress + ' connected');
-
-    // Send a message to openNi that we are ready to recieve some funk.
-    javaSocket.write( '\n' );
+		/* USER
+		{
+			name : player._name,
+			id	: player._userId,
+			pos : player.getPosition, 
+			kinect : player._kinectData, 
+			ip : player._id,
+			mesh : player._meshName 
+			visible : player._visible
+		}	
+		*/
+		
+	var count = 1;
+	// Look for the user with the same ip address.
+	for( index in users ){
 	
-    // The point of entry, giggidy, from openNi
+		console.log("interface is %s .",interfaceIpAddress);
+		
+		if( users[ index ].ip == interfaceIpAddress ){
+		
+			console.log(" We found the corresponding client to the interface." );
+			// First or second user per device.
+			users[ index ].id = count;
+			// 1 PERSON PER PC?
+			count++;
+			// We're ready to stream. When the library gets a '\n' it begins to send the data...
+			javaSocket.write( '\n' );
+			break;
+		}
+		else
+		{
+			console.log(" We did not find the corresponding client to the interface. Not storing data." );		
+		}
+	}
+		
+	//
+	// DATA RECIEVED FROM THE KINECT.
+	//
     javaSocket.on('data', function( data ){
 		
-		// Debugging Node is a pain in the balls.
-		packetLength = data.length;
-		packetCount++;
-		console.log("	");
-		console.log("	");
-		console.log( packetCount + " packets recieved and "+fullPackets+" have been recieved.");
-		console.log("	");
-		console.log("	");
+		console.log(" Streaming data " );
+		
 		dataBuffer += data;
 		
 		newlineIndex = dataBuffer.indexOf( '\n' );
@@ -199,21 +274,18 @@ javaServer.on('connection', function ( javaSocket ) {
 		if( newlineIndex == -1){// Did we find an end of line?
 		
 			console.log("There was no end of line");
+			// Send next packet.
 			javaSocket.write( '\n' );
 			return;// If there was no end of package in the data return.
 		}
 		
 		console.log("There was an end of line detected.");
-		kinectMap = JSON.parse( dataBuffer.slice(0, newlineIndex) );
-		fullPackets++;
-        	dataBuffer = dataBuffer.slice(newlineIndex + 1);
 		
+		users[ javaSocket.address().address ].kinect = JSON.parse( dataBuffer.slice(0, newlineIndex) );
+		console.log( users[ javaSocket.address().address ].kinect );
+        dataBuffer = dataBuffer.slice(newlineIndex + 1);
 		
-		if( !kinectSynced ){// Used by the client to only stream when we have connected to openNi.
-			kinectSynced = true;
-			gClient.emit('kinectSynced', true);
-			console.log("The kinect data has began streaming and the browser should connect.");
-		}
+		users[ javaSocket.address().address ].visible = true;
 		
 		javaSocket.write( '\n' );
 		
@@ -221,14 +293,9 @@ javaServer.on('connection', function ( javaSocket ) {
 
 	// User has disconnected...
     javaSocket.on('close', function() {
-	
-		gClient.emit('kinectSynced', false);
-		console.log("The kinect data has ended streaming and the browser shouldn't connect.");
-		console.log( "The packet caount for the client was: "+ packetCount);
-		packetCount = 0;
-		fullPackets = 0;
-		kinectSynced = false;
-        console.log('Java ' + clientAddress + ' disconnected');
+		
+		//users[ javaSocket.address().address ].visible = false;
+		delete interfaces[ javaSocket.address().address  ];
     });
 });
 

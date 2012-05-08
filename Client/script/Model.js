@@ -26,7 +26,7 @@ function Model( jointNames ){
 		
 		this._dummyMap[ this._jointNames[ i ] ] = this._joint[ this._jointNames[ i ] ].getPosition()
 		
-	}//End for
+	}
 }
 
 
@@ -49,14 +49,13 @@ Model.prototype.setJointPosition = function( name, pos ){
 
 
 
-
 /**	@Name:
 	@Brief:	
 	@Arguments:
 	@Returns:
 
 */
-Model.prototype.setAllJoints = function( map, playerPos ){
+Model.prototype.setAllJoints = function( playerPos, kinectMap ){
 
 	//The position in kinect space.
 	var kinectPos = new THREE.Vector3(0,0,0);
@@ -94,6 +93,7 @@ Model.prototype.setAllJoints = function( map, playerPos ){
 
 
 
+
 /**	@Name:
 	@Brief:	
 	@Arguments:
@@ -123,41 +123,3 @@ Model.prototype.getPosition = function(  ){
 			
 };
 
-
-
-
-
-/**	@Name: UPDATE
-
-	@Brief: Update the vector positions of the skeleton of the player.
-	The raw kinect data is a vector position from the actual device-
-	but we want to translate it so that it corresponds to the player-
-	object position.
-	
-	@Arguments: Vector3 playerPos
-	The cartesian position of the player.
-	
-	@Returns:
-	N/A
-
-*/
-Model.prototype.update = function( playerPos ){
-	
-	// Move all the joint starting from an offset of the player.
-	var posFromPlayer = new THREE.Vector3(0,0,0);
-	var kinectSpacePos= new THREE.Vector3(0,0,0);
-	
-	// Construct all the joints.
-	for( var i = 0; i < this._jointNames.length; i++){
-		
-		// Store the joint pos in the kinect space.
-		kinectSpacePos = kinectMap[ this._jointNames[ i ] ];
-		
-		// Add the kinect pos to the player pos and assign to posFrom player.
-		posFromPlayer.add( playerPos, kinectSpacePos.getPosition() );
-		
-		// Assign the position in the game space to its corresponding joint.
-		this._joint[ this._jointNames[ i ] ].setPosition( posFromPlayer );
-		
-	}//End for	
-}

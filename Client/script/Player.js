@@ -22,17 +22,27 @@
 	@Returns
 	N/A
 */
-function Player( name, id, meshUrl, position){
+function Player( name, position ){
 
 	// The name of the user.
 	this._name = name;
 	// The unique id, i.p address for Example.
-	this._id = id;
+	this._ip  = undefined;
+	// The local id from the kinect.
+	this._userId = undefined;
+	// The Kinect data.
+	this._kinectData = undefined;
+	// Is the player to be drawn to screen.
+	this._visible = undefined;
 	// The avatar url.
+	this._model = undefined;
+	// The url of the Avatar.
+	this._meshName = undefined;
+	/*
 	if( meshUrl != ""){
 		this._model = this.loadModelMesh( meshUrl );
-	}
-	
+	}	
+	*/
 	// The data for the joints
 	this._rig = new Model( jointList );
 	// The global position.
@@ -44,36 +54,23 @@ function Player( name, id, meshUrl, position){
 	// The walkspeed, could replace velocity.
 	this._walkSpeed = 50;
 	// The direction of the player.
-	this._direction = new THREE.Vector3(0,0,0);
+	this._direction = new THREE.Vector3(0,0,1);
 	// Move 100 units in the z direction, this is the players orientation.
 	this._sightNode = new THREE.Vector3(0,0,100);
+	// Define the up axis on the cartesian plane.
 	this._upAxis = new THREE.Vector3( 0,0,1 );
 	
+	
+	// Set up the sphere vars
+	var radius = 100, segments = 10, rings = 10;
+	var Material = new THREE.MeshLambertMaterial( {color: 0xff0000 });
+	var Geometry = new THREE.SphereGeometry( radius, segments, rings );
+	
+	// The mesh of the Joint. Contains physical properties.
+	this._mesh = new THREE.Mesh( Geometry , Material );		
+	// Add ourself to the scene.
+	scene.add( this._mesh );	
 };
-
-
-
-/**	@name UPDATE()
-
-	@brief
-	Updates an instance of the player.
-	
-	@args
-	dt = A decimal value that represents the time since last frame.
-	
-	@Returns
-	N/A
-*/
-Player.prototype.update = function( dt ){
-	
-	// Calculate new position and set in model.
-	
-	// Calculate new velocity.
-	
-	// Calculate new Direction and set in model.
-
-};
-
 
 
 /**	@name SYNC JOINTS(  ) 
@@ -88,10 +85,13 @@ Player.prototype.update = function( dt ){
 	N/A
 
 */
-Player.prototype.syncJoints = function( jointMap ){
+Player.prototype.syncJoints = function( ){
 
-	 var newPosition = this._rig.setAllJoints( jointMap, this._position );
-	 this._position = newPosition;
+	if (this._kinectData !== undefined ){
+	
+		var newPosition = this._rig.setAllJoints( this._position , this._kinectData );		
+		this._position = newPosition;
+	}
 	
 };
 
@@ -111,6 +111,7 @@ Player.prototype.syncJoints = function( jointMap ){
 Player.prototype.setPosition = function( pos ){
 
 	this._position = pos;
+	this._mesh.position = pos;
 };
 
 
@@ -130,8 +131,6 @@ Player.prototype.setPosition = function( pos ){
 Player.prototype.getPosition = function(  ){
 
 	return ( this._position );
-	
-	//return this._rig.getPosition();
 };
 
 
@@ -170,9 +169,17 @@ Player.prototype.move = function( direction ){
 	// Move in the direction of the sight node.
 	var dir = new THREE.Vector3( this._sightNode.x - this._position.x, this._position.y, this._sightNode.z- this._position.z );
 	dir.normalize();
+	var dist = direction * this._walkSpeed;
+	var x = dist * dir.x;
+	var y = 0;// Move on the x z plane.
+	var z = dist * dir.z;
+	var newVec =  new THREE.Vector3( x,y,z )
 	
-	this._position.addSelf( dir.multiplyScalar( direction * this._walkSpeed ) );
-	this._sightNode.addSelf( dir.multiplyScalar( direction * this._walkSpeed ) );
+	this._position.addSelf( newVec  );
+	this._sightNode.addSelf( newVec  );
+	
+	// Set the position of the mesh for the player.
+	this._mesh.position = this._position;
 	/*
 	// Update player position.
 	this._position.addSelf( pos );
@@ -348,6 +355,6 @@ Player.prototype.loadModelMesh = function( url ){
 		model.scale.set(0.1,0.1,0.1);
 		that._model.position = that._position;
 		that._model.scene.rotation.x = -Math.PI/2;
-		scene.add( that._model.scene );
+		//scene.add( that._model.scene );
 	});
 };

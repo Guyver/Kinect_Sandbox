@@ -4,9 +4,16 @@
 	
 	@Brief:
 	Where the game logic is controlled.
+	
+	* Add to players.
+	* Will collision detection be done client side or server side?
+	* Will the timing events be server side or client side?
+	* Will the game flow logic be client or server side?
 
 */
 
+// Connect to the server.
+var socket = io.connect('193.156.105.166:7541');
 
 // Variables for the sugary goodness!
 var gui, param, varNum, interval;
@@ -25,7 +32,7 @@ var windowHeight = window.innerHeight;
 var numJoints, model, jointList;
 
 // Game Physics vars
-var player;
+var player, players;
 
 // The time since last frame.
 var deltaTime, last, current;
@@ -59,7 +66,7 @@ function init(){
 	info.style.top = '10px';
 	info.style.width = '100%';
 	info.style.textAlign = 'center';
-	info.innerHTML = 'Use the sliders in the top right corner to move the camera about.';
+	info.innerHTML = 'Use A and D to rotate and Up and Down to move forward and backward.';
 	container.appendChild( info );
 
 	
@@ -77,6 +84,12 @@ function init(){
 	setupGui();
 	// Skybox...etc
 	setupEnviornment();
+	// Request players from the server.
+	getPlayers();
+	// Create the players got from the server.
+	createPlayers();
+	// Send the server your data.
+	sendData();
 	
 	// Initalise the game loop to 60fps. Anim frame pffft
 	interval = setInterval( 'gameLoop()', 1000 / 60 );
@@ -210,20 +223,20 @@ function createObjects(){
 				'RIGHT_SHOULDER',
 				'TORSO'];
 				
-		player = new Player( 'James', 42, "", new THREE.Vector3( 100,100,100) );//'model/monster.dae'
-		
-			
+	socket.emit( 'test' );	
+	player = new Player( "Default", new THREE.Vector3( 1000 , 100 ,1000 ) );
+
 	var my_scene = {
 				"map" : [
-					"######################",
-					"#    #    #     #    #",
-					"#    #    #     #    #",
-					"#                    #",
-					"#    #    #     #    #",
-					"#    #    #     #    #",
-					"######################"
+					"## ##### ##### #### ###",
+					"#    #     #     #    #",
+					"#    #     #     #    #",
+					"# P                   #",
+					"#    #     #     #    #",
+					"#    #     #     #    #",
+					"## ##### ##### #### ###"
 				] 
-			};
+	};
 			
 	architect = new Scene_Builder( my_scene );
 		
@@ -238,59 +251,36 @@ function createObjects(){
 */
 function gameLoop(){
 	
+	
+	for ( each_player in players ){
+	
+		players[ each_player ].syncJoints();		
+	}
 	// Initalise last for the 1st iteration.
-	if(!last)	{
-		last= new Date();
-	}	
+	if(!last)last= new Date();
 	
-	/*
-	// Set the camera Z to the gui for debugging!
-	camera.position.x = param['cameraX'];
-	camera.position.y = param['cameraY'];
-	camera.position.z = param['cameraZ'];
-	*/
+	var playerPos = player.getPosition();
+	// Move the camera with the player.
+	camera.position.x = playerPos.x;
+	camera.position.y = playerPos.y;
+	camera.position.z = playerPos.z;
 	
-	// Camera Follows the player.
-	
-	camera.position.x = player.getPosition().x;
-	camera.position.y = player.getPosition().y;
-	camera.position.z = player.getPosition().z;
-	
-
+	camera.lookAt( player.getSightNode() );
 	// Find time now.
 	current = new Date();
+	
 	// Get the change in time, dt.
 	deltaTime = current.getTime() - last.getTime();
+	
 	// reset the last time to time this frame for the next.
-	last = current;
-	
-	if( kinect ){
-		//Get the kinect data.
-		socket.emit('kinect');
-		console.log("Getting the kinect data from main");
-	}
-	
-	try{
-	
-		if( kinect ){
-		
-			syncKinect();
-		}
-		else{
-		
-		}
-	}catch( err ){
-		
-		console.log("kinectMap is undefined or null");
-		kinectMap.clear();
-		return;
-	}
+	last = current;	
 	
 	// Look at the Player.
-	this.camera.lookAt( player.getSightNode() );
+	//this.camera.lookAt( player.getSightNode() );
+	
+	// Render the scene.
 	render();
 }
-
 
 
 
@@ -518,15 +508,134 @@ function Skybox(){
 
  
  
-/**	@Name:	Sync Kinect
+/**	@Name:	Sync Users
 	@Brief:	Syncronise the users kinect data with the player object in game.
 	@Arguments:N/A
 	@Returns:N/A
 */
-function syncKinect() {  
+function syncUsers() {  
+	/*
+	if( updateSelf !== undefined ){
 	
-	player.syncJoints( kinectMap );
+		player.setPosition( updateSelf.pos );
+		player._name = updateSelf.name;
+	}
+	// Players to be added to the scene.
+	while ( playersToBeAdded.length > 0 ){
+	
+		var playerData = playersToBeAdded.pop();
+		var ipAddress = playerData.ip;
+		
+		if( players === undefined ){	
+			// Initalise players.
+			players = [];		
+		}
+		// Create a new player and add it to the scene.
+		players.push( { ipAddress : new Player( playerData.name, playerData.position ) } );		
+	}// End while
+	
+	//
+	//	Update to current positions.
+	//
+	*/
+} //End sync Users
+
+/*
+
+// Request players from the server.
+getPlayers();
+// Create the players got from the server.
+createPlayers();
+// Send the server your data.
+sendData();
+
+*/
+
+
+
+
+
+
+
+
+function getPlayers() {  
+	// Request all the players registered in the server.
+	socket.emit( 'getPlayers' );
+	socket.emit( 'test' );
 }  
+
+
+
+function createPlayers( data ) {  
+
+	players = {};
+	
+	for( index in data ){
+		players[ data[ index ].ip ] = new Player(data[ index ].name, data[ index ].pos );
+		players[ data[ index ].ip ]._ip = data[ index ].ip;
+		players[ data[ index ].ip ]._kinectData = data[ index ].kinect;
+	}
+}  
+
+
+
+function updatePlayers( data ) {  
+	
+	// Use the ip to match up the data. 
+	
+	for ( index in data ){
+	
+		try{
+			players[ index ].setPosition( data[index].pos );
+		}
+		catch( err ){
+			console.log("Couldn't find the player with ip address of  : %s", index );
+			if( index !== undefined){
+				// Create the player.
+				players[ index ] = new Player( "", data[index].pos);
+			}
+		}		
+	}// end for.	
+} //end func. 
+
+
+
+function sendData(  ) {  
+		// Send a template to the server to store. This is fine.
+	socket.emit('registerMeInServer', { 
+		
+		name : player._name,
+		id	: player._userId,
+		pos : player._position,
+		kinect : player._kinectData,
+		ip : player._ip,
+		mesh : player._meshName,
+		visible : player._visible
+	});	
+} //end func. 
+
+
+
+function addUser( user ){
+
+	// Create and add the new user.
+	players[ user.ip ] = new Player( user.player.name, user.player.pos );
+	players[ user.ip ]._ip = user.ip;
+}
+
+
+
+
+
+
+
+
+function removeUser( user ){
+
+	// Delete the user...
+	delete players[ user.ip ];
+
+}
 
 
 
@@ -563,7 +672,8 @@ function randomRange(min, max) {
 function handleKeyEvents( event ) {
 	
 	var key = event.keyCode;
-	
+	var update = true;
+	socket.emit( 'test' );
 	switch( key ){
 		
 		case 38:
@@ -598,14 +708,82 @@ function handleKeyEvents( event ) {
 	  		// Rotate Down
 			player.rotateDown();
 	  		break;
+		case 88:
+		// Fps
+			camera.position = player.getPosition();
+			camera.lookAt( player.getSightNode() );
+	  		break;
+		case 90:
+		// Top down.
+			camera.position.y += 100;
+			camera.lookAt( player.getPosition() );
+	  		break;
 		default:
+			update = false;
 	  		return;
+			
+	}
+	
+	var map = { 
+			name : player._name,
+			id	: player._userId,
+			pos : player.getPosition(), 
+			kinect : player._kinectData, // Which co ordinate system is this in?
+			ip : player._ip,
+			mesh : player._meshName,
+			visible : player._visible 
+		};
+	if( update ){
+		socket.emit('updateMe', map	);
 	}
 	
 }
 
 
+socket.on( 'heresPlayersFromServer', function( data ) {
 
+	createPlayers( data )
+});
+
+
+socket.on( 'playersDataFromServer',function( data ){
+
+	updatePlayers( data )
+});
+
+
+socket.on( 'registerSelf', function( data ){
+	
+	player._name = data.player.name;
+	player._ip = data.player.ip;
+	
+});
+
+
+socket.on( 'RegisterNewUser', function( data ){
+
+	addUser( data );
+});
+
+
+socket.on( 'updateHim', function( data ){
+
+	players[ data.ip ].setPosition( data.pos );
+	players[ data.ip ]._kinectData = data.kinect;
+});
+
+
+socket.on( 'deleteHim', function( data ){
+
+	// Find in the scene and remove.
+	delete players[ data.ip ];
+});
+
+
+socket.on( 'test', function( data ){
+		
+	var dummy = data;	
+});
 
 /**	@Name:	Resize
 	@Brief:	Called from the dom's resize listener.
