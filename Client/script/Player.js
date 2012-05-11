@@ -52,11 +52,10 @@ function Player( name, position ){
 	this._model = undefined;
 	// The url of the Avatar.
 	this._meshName = undefined;
-	/*
-	if( meshUrl != ""){
-		this._model = this.loadModelMesh( meshUrl );
-	}	
-	*/
+
+	this._model = this.loadModelMesh( 'model/monster.dae' );
+
+	
 	// The data for the joints
 	this._rig = new Model( jointList, this._position );
 	// The items the player has.
@@ -68,7 +67,8 @@ function Player( name, position ){
 	var Geometry = new THREE.SphereGeometry( radius, segments, rings );
 	
 	// The mesh of the Joint. Contains physical properties.
-	this._mesh = new THREE.Mesh( Geometry , Material );		
+	this._mesh = new THREE.Mesh( Geometry , Material );	
+	this._mesh.name	= "Player";
 	// Add ourself to the scene.
 	scene.add( this._mesh );	
 	
@@ -130,7 +130,9 @@ Player.prototype.update = function( ){
 */	
 	// Apply the movements from the Kinect.
 	this.handleMovement();
+	this._model.position = this._position;
 	
+	this._model.children[0].children[0].position = this._position;
 	this.syncJoints();
 	
 	if( this._kinectData == undefined ){
@@ -463,12 +465,15 @@ Player.prototype.rotateDown = function( ) {
 Player.prototype.loadModelMesh = function( url ){
 	
 	var that = this;
-	new THREE.ColladaLoader().load( url ,function( collada ){
+	var what = new THREE.ColladaLoader();
+	
+	what.load( url ,function( collada ){
 		
-		that._model = collada;
-		model.scale.set(0.1,0.1,0.1);
+		that._model = collada.scene;
+		that._model.scale.set(0.5,0.5,0.5);
 		that._model.position = that._position;
-		that._model.scene.rotation.x = -Math.PI/2;
-		//scene.add( that._model.scene );
+		that._model.rotation.x = -Math.PI/2;
+		
+		scene.add( that._model );
 	});
 };

@@ -17,7 +17,7 @@ function Model( jointNames, playerPos ){
 	// Construct all the joints.
 	for( var i = 0; i < this._jointNames.length; i++){
 	
-		this._joint[ this._jointNames[ i ] ] = new Joint(  );
+		this._joint[ this._jointNames[ i ] ] = new Joint( this._jointNames[ i ] );
 		
 		// Give it a random position.
 		this._joint[ this._jointNames[ i ] ].setPosition(  new THREE.Vector3( 

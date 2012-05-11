@@ -261,6 +261,8 @@ function gameLoop(){
 		players[ each_player ].update();	
 	}
 	
+	// Test player wall collisions...
+	level_Manager.testCollision( player._mesh, scene );
 	// Initalise last for the 1st iteration.
 	if(!last)last= new Date();
 	
@@ -545,21 +547,6 @@ function syncUsers() {
 	*/
 } //End sync Users
 
-/*
-
-// Request players from the server.
-getPlayers();
-// Create the players got from the server.
-createPlayers();
-// Send the server your data.
-sendData();
-
-*/
-
-
-
-
-
 
 
 
@@ -568,6 +555,7 @@ function getPlayers() {
 	socket.emit( 'getPlayers' );
 	socket.emit( 'test' );
 }  
+
 
 
 
@@ -583,6 +571,7 @@ function createPlayers( data ) {
 		players[ data[ index ].ip ]._kinectData = data[ index ].kinect;
 	}
 }  
+
 
 
 
@@ -607,6 +596,7 @@ function updatePlayers( data ) {
 
 
 
+
 function sendData(  ) {  
 		// Send a template to the server to store. This is fine.
 	socket.emit('registerMeInServer', { 
@@ -623,16 +613,13 @@ function sendData(  ) {
 
 
 
+
 function addUser( user ){
 
 	// Create and add the new user.
 	players[ user.ip ] = new Player( user.player.name, user.player.pos );
 	players[ user.ip ]._ip = user.ip;
 }
-
-
-
-
 
 
 

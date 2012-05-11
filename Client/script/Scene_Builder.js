@@ -64,7 +64,7 @@ Scene_Builder.prototype.createScene = function( data ){
 			}));
 		texture.doubleSided = true;
         texture.position = new THREE.Vector3(this._blockSize*columns, yPosition, this._blockSize*rows)
-		
+		texture.name = "Wall";
         scene.add(  texture );
       }
     }

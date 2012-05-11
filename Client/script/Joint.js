@@ -5,7 +5,7 @@
 	A model has 15 joints and this is the template class for them all.
 
 */
-function Joint(  ){
+function Joint( name ){
 
 	this._accel = new THREE.Vector3();		// Usually Gravity if ignoring external force.
 	this._velocity = new THREE.Vector3();		// Velocity vector.
@@ -18,7 +18,7 @@ function Joint(  ){
 	
 	// The mesh of the Joint. Contains physical properties.
 	this._mesh = new THREE.Mesh( this._Geometry , this._Material );		
-	
+	this._mesh.name = name;
 	// Add ourself to the scene.
 	scene.add( this._mesh );						
 }
