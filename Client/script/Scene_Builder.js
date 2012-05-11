@@ -1,4 +1,14 @@
+/*
+	For this to reconstruct a level at runtime.
+		* An array, with multiple level designs.
+		* Be edited to allow for player position.
+		* Be edited to allow for object placement.
+			- P = Player.
+			- O = Object/s
+			- D = Door
+			- H = Help Zone
 
+*/
 /*
 my_scene = {
 				"map" : [

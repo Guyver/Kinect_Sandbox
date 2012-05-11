@@ -10,12 +10,13 @@
 function Collision_Manager(  ){
 
 
+
 };
 
 
 
 
-/**	@Name:
+/**	@Name: Sphere - Sphere Collision
 
 	@Brief:
 	
@@ -24,50 +25,47 @@ function Collision_Manager(  ){
 	@Returns:
 
 */
-Collision_Manager.prototype.sphereCollision = function( objA, objB ){
+Collision_Manager.prototype.sphereSphereCollision = function( objA, objB ){
 
-	// Return if the spheres are intersecting.
-	return;
+
 	
 };//End sphere collision.
 
 
 
 
-/**	@Name:
+/**	@Name:	Cube - Cube Collision
 
 	@Brief:	
+	Axis Aligned Bounding Boxes
 	
 	@Arguments:
 	
 	@Returns:
 */
-Collision_Manager.prototype.cubeCollision = function( objA, objB ){
+Collision_Manager.prototype.cubeCubeCollision = function( objA, objB ){
 
-	// Return if the cubes are colliding.
 
 };//End cube collision
 
 
 
-/**	@Name:
+
+/**	@Name:	Plane - Sphere Collision
 	@Brief:	
+	Point - line collision detection.
 	@Arguments:
 	@Returns:
 
 */
-Collision_Manager.prototype.planePointCollision = function( objA, line ){
+Collision_Manager.prototype.planeSphereCollision = function( objA, plane ){
 
-	var newPos = new THREE.Vector3( 0,0,0 );
-	
-	return ( newPos.add(  playerPos, kinectPos ) );
-			
 };
 
 
 
 
-/**	@Name:
+/**	@Name: Distance
 	@Brief:	
 	@Arguments:
 	@Returns:
@@ -75,17 +73,32 @@ Collision_Manager.prototype.planePointCollision = function( objA, line ){
 */
 Collision_Manager.prototype.getDistance = function( objA, objB ){
 
-			
+		
 };
 
 
 
-
-
-/**	@Name:
+/**	@Name: S.A.T 
 	@Brief:	
 	@Arguments:
 	@Returns:
+
+*/
+Collision_Manager.prototype.SAT = function( objA, objB ){
+
+	// Seperating axis Therom. Convex polygons
+		
+};
+
+
+
+/**	@Name: Update
+	@Brief:	
+	Check all objects in the scene to see if any collisions occured.
+	@Arguments:
+	N/A
+	@Returns:
+	N/A
 
 */
 Collision_Manager.prototype.update = function(  ){

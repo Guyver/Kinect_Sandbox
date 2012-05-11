@@ -16,7 +16,7 @@ var server = http.createServer( function ( request , response ) {
     var filePath = '.' + request.url;
 
     if ( filePath == './' ){// Just the root, localtion of server.js. Will only enter here initally.
-        filePath = './index.htm';// Serve html page.
+        filePath = './home.htm';// Serve html page.
 	}
 	
     var extname = path.extname( filePath );
@@ -79,18 +79,16 @@ var server = http.createServer( function ( request , response ) {
 
 var socket = io.listen( server ); 		// Socket IO server instance.
 var users = [];							// List of connected players.
-var interfaces = [];
 var userCount = 0;						// Number of users connected.
-var map = [];
+var map = [];							// Container for the player data.
+var rooms = [];							// Must be implemented to seperate players.
+var connected = [];
 
-/*		EXAMPLE USE
-	socket.sockets.emit('updatechat', client.username, message );		// Send to everyone, including me.
-	socket.sockets.send( 'updatechat', client.username, message );	    // Send to everyone but me.
-	client.emit('updatechat', "Please enter your user name to chat");	// Send to just me.
-	
-*/
+
 socket.sockets.on( 'connection', function( client ){
 	
+	
+	connected.push( client.handshake.address.address );
 	
 	//				(1)
 	// GET PLAYERS, SEND TO JUST ME.
@@ -144,7 +142,7 @@ socket.sockets.on( 'connection', function( client ){
 		if( users[ me.ip ] !== undefined){
 		
 			users[ me.ip ].pos = me.pos;
-			users[ me.ip ].kinect = me.kinect;
+			//users[ me.ip ].kinect = me.kinect;
 		}
 		else
 		{
@@ -158,6 +156,23 @@ socket.sockets.on( 'connection', function( client ){
 
 	});
 	
+	
+	//			(3A)
+	// GIVE ME MY KINECT DATA YOU SOB!
+	//
+	client.on( 'updateKinect', function( ip ) {
+		console.log( "Update my kinect request on server");
+		
+		if( users[ ip ] !== undefined ){
+			client.emit('syncKinect', users[ ip ].kinect );
+		}
+		else
+		{
+			console.log( "Not sending kinect data...The user isn't registered yet." );
+		}
+	});
+	
+	
 	// 				(4)
 	// TELL EVERYONE I'M OFF AND DELETE ME.
 	//
@@ -169,6 +184,7 @@ socket.sockets.on( 'connection', function( client ){
 		delete users[ client.handshake.address.address ];
 	});
 	
+
 	client.on( 'test', function(){
 		
 		var test = {};
@@ -191,13 +207,14 @@ server.listen( clientPort );
 
 
 var javaPort = 7540;
+var dataBuffer = "";
+var newlineIndex = 0
 var javaServer = require('net').createServer();
 
 javaServer.on('listening', function () {
 
     console.log('Server is listening on for kinect data on :' + javaPort);
 });
-
 
 javaServer.on('error', function ( e ) {
 
@@ -209,43 +226,20 @@ javaServer.on('close', function () {
     console.log('Server closed');
 });
 
-
-var dataBuffer = "";
-var newlineIndex = 0
-var kinectSynced = false;
-
-//
-// 
-//
 javaServer.on('connection', function ( javaSocket ) {
+
+	var remote_address = javaSocket.remoteAddress;
+	console.log( "An interface connected to stream traffic on : "+ remote_address );
 	
-    // Store the address of the java client.
-    var clientAddress = javaSocket.address().address + ':' + javaSocket.address().port;
-	var interfaceIpAddress = javaSocket.address().address;
-	console.log("An interface connection was detected, "+ interfaceIpAddress );
-	interfaces[ interfaceIpAddress ] = {};
-	
-		/* USER
-		{
-			name : player._name,
-			id	: player._userId,
-			pos : player.getPosition, 
-			kinect : player._kinectData, 
-			ip : player._id,
-			mesh : player._meshName 
-			visible : player._visible
-		}	
-		*/
-		
+	var interfaceIpAddress = remote_address;
+
 	var count = 1;
-	// Look for the user with the same ip address.
-	for( index in users ){
 	
-		console.log("interface is %s .",interfaceIpAddress);
+	for( index in users ){
 		
-		if( users[ index ].ip == interfaceIpAddress ){
+		if( users[ index ].ip == remote_address ){
 		
-			console.log(" We found the corresponding client to the interface." );
+			console.log(" We found the corresponding client, %s .",users[ index ].ip );
 			// First or second user per device.
 			users[ index ].id = count;
 			// 1 PERSON PER PC?
@@ -264,29 +258,20 @@ javaServer.on('connection', function ( javaSocket ) {
 	// DATA RECIEVED FROM THE KINECT.
 	//
     javaSocket.on('data', function( data ){
-		
-		console.log(" Streaming data " );
-		
 		dataBuffer += data;
 		
 		newlineIndex = dataBuffer.indexOf( '\n' );
 		
-		if( newlineIndex == -1){// Did we find an end of line?
-		
-			console.log("There was no end of line");
+		if( newlineIndex == -1){
 			// Send next packet.
 			javaSocket.write( '\n' );
 			return;// If there was no end of package in the data return.
 		}
 		
-		console.log("There was an end of line detected.");
-		
-		users[ javaSocket.address().address ].kinect = JSON.parse( dataBuffer.slice(0, newlineIndex) );
-		console.log( users[ javaSocket.address().address ].kinect );
-        dataBuffer = dataBuffer.slice(newlineIndex + 1);
-		
-		users[ javaSocket.address().address ].visible = true;
-		
+		// Store the kinect data locally on the server.
+		users[ javaSocket.remoteAddress ].kinect = JSON.parse( dataBuffer.slice(0, newlineIndex) );
+		users[ javaSocket.remoteAddress ].visible = true;
+        dataBuffer = dataBuffer.slice(newlineIndex + 1);	
 		javaSocket.write( '\n' );
 		
 	});// End of on.Data
@@ -295,7 +280,7 @@ javaServer.on('connection', function ( javaSocket ) {
     javaSocket.on('close', function() {
 		
 		//users[ javaSocket.address().address ].visible = false;
-		delete interfaces[ javaSocket.address().address  ];
+		//delete interfaces[ javaSocket.remoteAddress  ];
     });
 });
 

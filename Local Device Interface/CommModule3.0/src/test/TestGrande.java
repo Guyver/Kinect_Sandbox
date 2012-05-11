@@ -17,23 +17,29 @@
 package test;
 
 
-import iservices.IKinectAbsoluteSpaceForATimeService;
-import iservices.IKinectTotalSpaceTravelledForATimeService;
-import iservices.IKinectUserJointReachPointService;
-
 import java.io.IOException;
 
-
-import org.OpenNI.Point3D;
-import org.OpenNI.SkeletonJoint;
-
-
-
-import launchers.*;
+import kinectThreads.KinectEnhacedSkeletonLauncher;
+import kinectThreads.KinectPoseEnum;
 
 
 
-import control.*;
+import launchers.KinectAbsoluteSpaceForATimeLauncher;
+
+import launchers.KinectPoseLauncher;
+import launchers.KinectSkeletonLauncher;
+import launchers.KinectTotalSpaceTravelledForATimeLauncher;
+import launchers.KinectUserJointReachPointLauncher;
+import launchers.NoninLauncher;
+import launchers.NunchukAnalogStickLauncher;
+import launchers.NunchukButtonsLauncher;
+import launchers.WiiBoardLauncher;
+import launchers.WiiMoteAccelerationLauncher;
+import launchers.WiiMoteButtonsLauncher;
+import launchers.WiiMoteIRGlanceLauncher;
+import launchers.WiiMoteIRLauncher;
+import launchers.WiiMoteRotationLauncher;
+import control.DeviceManager;
 
 public class TestGrande 
 {
@@ -55,6 +61,9 @@ public class TestGrande
 	KinectUserJointReachPointLauncher kujrpl;
 	KinectAbsoluteSpaceForATimeLauncher kasfatl;
 	KinectTotalSpaceTravelledForATimeLauncher ktstfatl;
+
+	
+	
 	public static void main (String args []) throws IOException
 	{		
 		System.setProperty("bluecove.jsr82.psm_minimum_off", "true");
@@ -69,22 +78,55 @@ public class TestGrande
     public TestGrande() throws Exception
     {    	
     	
-    	
-    	
     	int theUserIWant=1;
+    	int maximumNumberOfKinectUsers =1;
     	
-    	
-    	DeviceManager dm = DeviceManager.getDeviceManager();
+    	//DeviceManager dm = DeviceManager.getDeviceManager("127.0.0.1", 7540,maximumNumberOfKinectUsers);
+    	DeviceManager dm = DeviceManager.getDeviceManager("193.156.105.166", 7540,maximumNumberOfKinectUsers);
+    	//DeviceManager dm = DeviceManager.getDeviceManager("193.156.105.153", 7540,maximumNumberOfKinectUsers);
     	
     	//dm.adjustKinectForTheBestTilt(theUserIWant);
+    
     	
     	
-		ksl= dm.getKinectSkeletonLauncher(theUserIWant);
+    	KinectPoseLauncher kplWalkLeftLegUp;
+    	KinectPoseLauncher kplWalkRightLegUp;
+    	KinectPoseLauncher kplStand;
+    	
+    	KinectPoseLauncher kplRisedLeftArm;
+    	KinectPoseLauncher kplRisedRightArm;
+    	KinectPoseLauncher kplHandsBack;
+    	
+    	
+    	kplWalkLeftLegUp= dm.getKinectPoseLauncher(theUserIWant, KinectPoseEnum.WALK_LEFT_LEG_UP);
+    	kplWalkRightLegUp= dm.getKinectPoseLauncher(theUserIWant, KinectPoseEnum.WALK_RIGHT_LEG_UP);
+    	kplStand= dm.getKinectPoseLauncher(theUserIWant, KinectPoseEnum.STAND);
+    	
+    	kplRisedLeftArm = dm.getKinectPoseLauncher(theUserIWant, KinectPoseEnum.RISED_LEFT_HAND);
+    	kplRisedRightArm = dm.getKinectPoseLauncher(theUserIWant, KinectPoseEnum.RISED_RIGHT_HAND);
+    	kplHandsBack = dm.getKinectPoseLauncher(theUserIWant, KinectPoseEnum.HANDS_BACK);
+        
+    	ClaseQueImplementaAPose jiji = new ClaseQueImplementaAPose();
+    	
+    	kplWalkLeftLegUp.addListener(jiji);
+    	kplWalkRightLegUp.addListener(jiji);
+    	kplStand.addListener(jiji);
+    	kplRisedLeftArm.addListener(jiji);
+    	kplRisedRightArm.addListener(jiji);
+    	kplHandsBack.addListener(jiji);
+    	Thread t1= new Thread(jiji);
+    	t1.start();
+    	
+    	
+    /*
+    	ksl= dm.getKinectSkeletonLauncher(theUserIWant);
+		
 		ClaseQueImplementaAKinectSkeleton cqaks= new ClaseQueImplementaAKinectSkeleton();
 		
 		ksl.addListener(cqaks);
-		Thread t1 = new Thread(cqaks);
-		t1.start();
+		
+	*/
+		
 		
 		
 		/*

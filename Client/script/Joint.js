@@ -55,3 +55,10 @@ Joint.prototype.setPosition = function( position ){
 
 	this._mesh.position =  position;
 };
+
+
+Joint.prototype.remove = function(){
+	
+	scene.remove( this._mesh );
+	renderer.deallocateObject( this._mesh );
+}

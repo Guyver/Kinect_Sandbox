@@ -37,6 +37,9 @@ var player, players;
 // The time since last frame.
 var deltaTime, last, current;
 
+var level_Manager = new Level_Manager();
+
+
 var imgContainer;
 
 var architect;
@@ -251,11 +254,13 @@ function createObjects(){
 */
 function gameLoop(){
 	
+	player.update();
 	
 	for ( each_player in players ){
-	
-		players[ each_player ].syncJoints();		
+		
+		players[ each_player ].update();	
 	}
+	
 	// Initalise last for the 1st iteration.
 	if(!last)last= new Date();
 	
@@ -274,12 +279,12 @@ function gameLoop(){
 	
 	// reset the last time to time this frame for the next.
 	last = current;	
-	
-	// Look at the Player.
-	//this.camera.lookAt( player.getSightNode() );
-	
+
 	// Render the scene.
 	render();
+	
+	// Get the kinect data for the next frame.
+	socket.emit( 'updateKinect', player._ip );
 }
 
 
@@ -569,8 +574,10 @@ function getPlayers() {
 function createPlayers( data ) {  
 
 	players = {};
+	// Dont Recreate yourself ffs, thats just stupid.
 	
 	for( index in data ){
+	
 		players[ data[ index ].ip ] = new Player(data[ index ].name, data[ index ].pos );
 		players[ data[ index ].ip ]._ip = data[ index ].ip;
 		players[ data[ index ].ip ]._kinectData = data[ index ].kinect;
@@ -746,10 +753,12 @@ socket.on( 'heresPlayersFromServer', function( data ) {
 });
 
 
+
 socket.on( 'playersDataFromServer',function( data ){
 
 	updatePlayers( data )
 });
+
 
 
 socket.on( 'registerSelf', function( data ){
@@ -760,10 +769,12 @@ socket.on( 'registerSelf', function( data ){
 });
 
 
+
 socket.on( 'RegisterNewUser', function( data ){
 
 	addUser( data );
 });
+
 
 
 socket.on( 'updateHim', function( data ){
@@ -773,17 +784,36 @@ socket.on( 'updateHim', function( data ){
 });
 
 
+
+socket.on('syncKinect', function( kinectData ){
+
+	if( kinectData !== null && kinectData !== undefined ){
+		player._kinectData = kinectData;
+	}
+});
+
+
+
 socket.on( 'deleteHim', function( data ){
 
-	// Find in the scene and remove.
+	if( data.ip == player._ip ){
+		// Remove self.
+		player.remove();
+		
+	}
+	players[ data.ip ].remove();
 	delete players[ data.ip ];
+	console.log( " The user %s has left the game. ", data.ip );
 });
+
 
 
 socket.on( 'test', function( data ){
 		
 	var dummy = data;	
 });
+
+
 
 /**	@Name:	Resize
 	@Brief:	Called from the dom's resize listener.

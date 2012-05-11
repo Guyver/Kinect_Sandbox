@@ -26,6 +26,20 @@ function Player( name, position ){
 
 	// The name of the user.
 	this._name = name;
+	// The global position.
+	this._position = position;
+	// THe velocity of the player.
+	this._velocity = new THREE.Vector3(0,0,0);
+	// The acceleration...
+	this._accel = new THREE.Vector3(0,-9.81,0);
+	// The walkspeed, could replace velocity.
+	this._walkSpeed = 50;
+	// The direction of the player.
+	this._direction = new THREE.Vector3(0,0,1);
+	// Move 100 units in the z direction, this is the players orientation.
+	this._sightNode = new THREE.Vector3(0,0,100);
+	// Define the up axis on the cartesian plane.
+	this._upAxis = new THREE.Vector3( 0,0,1 );
 	// The unique id, i.p address for Example.
 	this._ip  = undefined;
 	// The local id from the kinect.
@@ -44,22 +58,9 @@ function Player( name, position ){
 	}	
 	*/
 	// The data for the joints
-	this._rig = new Model( jointList );
-	// The global position.
-	this._position = position;
-	// THe velocity of the player.
-	this._velocity = new THREE.Vector3(0,0,0);
-	// The acceleration...
-	this._accel = new THREE.Vector3(0,-9.81,0);
-	// The walkspeed, could replace velocity.
-	this._walkSpeed = 50;
-	// The direction of the player.
-	this._direction = new THREE.Vector3(0,0,1);
-	// Move 100 units in the z direction, this is the players orientation.
-	this._sightNode = new THREE.Vector3(0,0,100);
-	// Define the up axis on the cartesian plane.
-	this._upAxis = new THREE.Vector3( 0,0,1 );
-	
+	this._rig = new Model( jointList, this._position );
+	// The items the player has.
+	this._inventory = [];
 	
 	// Set up the sphere vars
 	var radius = 100, segments = 10, rings = 10;
@@ -70,7 +71,10 @@ function Player( name, position ){
 	this._mesh = new THREE.Mesh( Geometry , Material );		
 	// Add ourself to the scene.
 	scene.add( this._mesh );	
+	
+	this._mesh.position = this._position;
 };
+
 
 
 /**	@name SYNC JOINTS(  ) 
@@ -87,13 +91,53 @@ function Player( name, position ){
 */
 Player.prototype.syncJoints = function( ){
 
-	if (this._kinectData !== undefined ){
+	// Update if there is something to update...
+	if ( this._kinectData !== undefined && this._kinectData !== null ){
 	
+		// The new position represents the updated height, keeps feet from going throuh floor.
 		var newPosition = this._rig.setAllJoints( this._position , this._kinectData );		
 		this._position = newPosition;
 	}
-	
 };
+
+
+
+/**	@name Update(  ) 
+
+	@brief
+	Updates the joint positions of the player using the kinect data.
+	
+	@args
+	jointMap = A map object containing the names and positions of the player's joints.
+	
+	@Returns
+	N/A
+
+*/
+Player.prototype.update = function( ){
+/*		 
+	var jointMap;
+	var enumMap;
+	
+	if ( this._kinectData[ "type" ] === "action" )
+	{
+		jointMap = this._kinectData;
+	}	
+	else if ( this._kinectData[ "type" ] === "jointPosition" )
+	{
+		enumMap = this._kinectData;
+	}
+*/	
+	// Apply the movements from the Kinect.
+	this.handleMovement();
+	
+	this.syncJoints();
+	
+	if( this._kinectData == undefined ){
+	
+		this._rig.move( this._position );
+	}
+};//End update
 
 
 
@@ -115,6 +159,27 @@ Player.prototype.setPosition = function( pos ){
 };
 
 
+/**	@name REMOVE( )
+
+	@brief
+	Remove the meshes associated with the Player.
+	
+	@args
+	
+	
+	@Returns
+	N/A
+*/
+Player.prototype.remove = function(  ){
+
+	//Remove all meshes from the scene associated with the player.
+	//Joint data.
+	this._rig.remove();
+	// Player Mesh.
+	scene.remove( this._mesh );
+	renderer.deallocateObject( this._mesh );
+};
+
 
 /**	@name GET POSITION(  )
 
@@ -132,25 +197,6 @@ Player.prototype.getPosition = function(  ){
 
 	return ( this._position );
 };
-
-
-
-/**	@name ROTATE(  )
-	
-	@brief
-	Rotate an face in the direction of the position specified.
-	
-	@args
-	pos = the vector3 position to orient towards. 
-	
-	@Returns
-	N/A
-*/
-Player.prototype.rotate = function( pos ){
-
-	this._model.rotation.x = pos;
-};
-
 
 
 /**	@Name: MOVE
@@ -205,6 +251,101 @@ Player.prototype.move = function( direction ){
 Player.prototype.getSightNode = function( ) {
 
 	return ( this._sightNode );
+};
+
+
+/**	@Name:	Set Sight Node
+	
+	@Brief:
+	Set the position of the sight node.
+	
+	@Arguments: angle
+	
+	@Returns: N/A
+
+*/
+Player.prototype.setSightNode = function( theta ) {
+	
+	// Translate...sight - player pos
+	this._sightNode.subSelf( this._position );
+	
+	// Rotate up and down
+	this._sightNode.x = this._sightNode.x * Math.cos( theta ) + Math.sin( theta ) * this._sightNode.z; 
+	this._sightNode.z = this._sightNode.z * Math.cos( theta ) - Math.sin( theta ) * this._sightNode.x 
+	
+	// Translate...sight + playerPos
+	this._sightNode.addSelf( this._position );
+	
+
+};
+
+
+/**	@Name:	Add Inventory
+	
+	@Brief:
+	Add an item picked up to the players inventory.
+	
+	@Arguments: Item - an object to carry.
+	
+	@Returns: N/A
+
+*/
+Player.prototype.addInventory = function( item ) {
+	
+	this._inventory.push( item );	
+
+};
+
+
+/**	@Name:	Handle Movement
+	
+	@Brief:
+	Process the commands that were sent from the users Kinect.
+	
+	@Arguments: N/A
+	
+	@Returns: N/A
+
+*/
+Player.prototype.handleMovement = function(  ) {
+	
+	// Process all the states to be applied to the Player.
+	var state = undefined;
+	
+	for ( index in this._kinectData ){
+		
+		if (  this._kinectData[ index ] == "true" ){
+			
+			state = index;		
+		}
+		
+		switch( state ){
+			case "walk":
+				this._walkSpeed = 50;
+				this.move( 1 );
+				break;
+			case "run":
+				this._walkSpeed = 100;
+				this.move( 1 );
+				break;
+			case "rotateLeft":
+				this.rotateLeft();
+				break;
+			case "rotateRight":
+				this.rotateRight();
+				break;
+			case "standStill":
+				// Do nowt!
+				break;
+			case "backwards":
+				this._walkSpeed = -50;
+				break;
+			default:
+				break;
+		}//End Switch
+		
+	}// End for 
+
 };
 
 
@@ -283,7 +424,6 @@ Player.prototype.rotateUp = function( ) {
 };
 
 
-
 /**	@Name:	Rotate Down
 	
 	@Brief:
@@ -306,32 +446,6 @@ Player.prototype.rotateDown = function( ) {
 	
 	// Translate...sight + playerPos
 	this._sightNode.addSelf( this._position );
-};
-
-
-/**	@Name:	Set Sight Node
-	
-	@Brief:
-	Set the position of the sight node.
-	
-	@Arguments: angle
-	
-	@Returns: N/A
-
-*/
-Player.prototype.setSightNode = function( theta ) {
-	
-	// Translate...sight - player pos
-	this._sightNode.subSelf( this._position );
-	
-	// Rotate up and down
-	this._sightNode.x = this._sightNode.x * Math.cos( theta ) + Math.sin( theta ) * this._sightNode.z; 
-	this._sightNode.z = this._sightNode.z * Math.cos( theta ) - Math.sin( theta ) * this._sightNode.x 
-	
-	// Translate...sight + playerPos
-	this._sightNode.addSelf( this._position );
-	
-
 };
 
 
