@@ -39,6 +39,7 @@ var deltaTime, last, current;
 
 var level_Manager = new Level_Manager();
 
+var objects = [];
 
 var imgContainer;
 
@@ -228,7 +229,7 @@ function createObjects(){
 				
 	socket.emit( 'test' );	
 	player = new Player( "Default", new THREE.Vector3( 1000 , 100 ,1000 ) );
-
+	
 	var my_scene = {
 				"map" : [
 					"## ##### ##### #### ###",
@@ -242,7 +243,11 @@ function createObjects(){
 	};
 			
 	architect = new Scene_Builder( my_scene );
-		
+	
+	for ( var i = 0; i < 5; i++ ){
+	
+		objects.push( new Object( new THREE.Vector3( 1000*i, 100, 5000 ) ) );	
+	}		
 }
 
 
@@ -256,13 +261,24 @@ function gameLoop(){
 	
 	player.update();
 	
+	// Update all the players.
 	for ( each_player in players ){
 		
 		players[ each_player ].update();	
 	}
 	
+	// Update the objects.
+	for( each_object in objects ){
+	
+		objects[ each_object ].update();
+	}
+	
 	// Test player wall collisions...
 	level_Manager.testCollision( player._mesh, scene );
+	
+	// Has an object been touched with both hands?
+	level_Manager.testPickups( player, objects );
+	
 	// Initalise last for the 1st iteration.
 	if(!last)last= new Date();
 	

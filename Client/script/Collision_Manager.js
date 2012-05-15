@@ -1,10 +1,17 @@
 
+
+// Cast 6 rays from the player. Left right and center in forward and backward direction 
+// Get what they intersect with...
+
+
 /**	@Name:	Collision_Manager Class
 
 	@Author: James Browne
 	
 	@Brief:
 	A Collision_Manager that controls all collisions regarding the 3d objects.
+	Only look after your own players collision and then all the objects/Walls.
+	DO NOT change to do all the player mesh collisions as its not nesisary.
 
 */
 function Collision_Manager(  ){
@@ -12,6 +19,7 @@ function Collision_Manager(  ){
 
 
 };
+
 
 
 /**	@Name: Test Collision
@@ -24,37 +32,64 @@ function Collision_Manager(  ){
 
 */
 Collision_Manager.prototype.testCollision = function( objA, scene ){
-
-	if ( objA.name === "Player" ){
-		var test = 0;
-	}
 	
 	var sceneMeshes = scene.children;
 	var wallMeshes = [];
 	var playerMeshes = [];
+	var moveableObjects = [];
+	var leftHand, rightHand;
 	var collision = false;
 	
+	// Cycle through all the meshes in the scene.
 	for ( index in sceneMeshes ){
-	
+		
+		// Pick out the walls.
 		if( sceneMeshes[ index ].name === "Wall" ){
 		
 			wallMeshes.push( sceneMeshes[ index ] );
 		}
+		// Pick out the players, objects, left and right hand.
 		else if( sceneMeshes[ index ].name === "Player" ){
 			
 			playerMeshes.push( sceneMeshes[ index ] );
 		}
+		else if( sceneMeshes[ index ].name === "Object" ){
+			
+			moveableObjects.push( sceneMeshes[ index ] );
+		}
+		else if( sceneMeshes[ index ].name === "LEFT_HAND" ){
+			
+			leftHand = sceneMeshes[ index ] 
+		}
+		else if( sceneMeshes[ index ].name === "RIGHT_HAND" ){
+			
+			rightHand = sceneMeshes[ index ] 
+		}
 	}
+	// For all the players, test against the wall radius.
 	for ( index in playerMeshes ){
 		
 		for( i in wallMeshes )
 		{
-			collision = this.ballWall( playerMeshes[ index ] , wallMeshes[ i ] );
+			var collision = this.ballWall( playerMeshes[ index ] , wallMeshes[ i ] );
+			
+			if( collision ){
+				console.log( "Player has collided with wall %i", wallMeshes[ i ].id );
+			}
+		}
+	}
+	// For all the moveable objects, test against the hands.
+	for (index in moveableObjects){
+	
+		var coll1 = this.sphereSphereCollision( leftHand, moveableObjects[ index ] );
+		var coll2 = this.sphereSphereCollision( rightHand, moveableObjects[ index ] );
+		if( coll1 && coll2 ){
+		
+			var collision = true;
+			console.log( "Someones hands have collided with object %i", moveableObjects[ index ].id );
 		}
 	}
 	
-	
-	var test = 0;
 	
 };//End sphere collision.
 
@@ -71,6 +106,17 @@ Collision_Manager.prototype.testCollision = function( objA, scene ){
 */
 Collision_Manager.prototype.sphereSphereCollision = function( objA, objB ){
 
+	var dist,rad1,rad2;
+	dist = this.getDistance( objA, objB );
+	rad1 = objA.boundRadius;
+	rad2 = objB.boundRadius;
+	
+	if( dist < (rad1 + rad2) ){
+	
+		return true;
+	}
+	
+	return false;
 
 	
 };//End sphere collision.
@@ -137,23 +183,77 @@ Collision_Manager.prototype.getDistance = function( objA, objB ){
 
 
 /**	@Name: S.A.T 
-	@Brief:	
+	@Brief:	Seperating axis Therom. Convex polygons
 	@Arguments:
 	@Returns:
 
 */
 Collision_Manager.prototype.SAT = function( objA, objB ){
-
-	// Seperating axis Therom. Convex polygons
+	
+	// Test number of edges.
+	
+	// Store edges.
+	
+	// Remove parallel edges and normalise.
+	
+	// For each edge project all points of both objects.
+	
+	// Store the min and max values for each object.
+	
+	// Check the min max values to determin a seperation.
+	
+	// Break on seperation.
+	
+	// Continue for all edges.
+	 return false;
 		
 };
 
+
+
+
 Collision_Manager.prototype.ballWall = function( ball, wall ){
 	
+	var insideBound = this.checkBounding( ball, wall );
+	
+	if ( insideBound ){
+	
+		return insideBound;
+		// Inside bound but not colliding for definate yet.
+		/*
+			// Cast a ray from position in the direction.
+			var leftRay = new THREE.Ray( ball.position, wallvector );
+			// Find out what it intersected.
+			var c = ray.intersectObject( meshes );
+		*/
+		var colliding = this.SAT( ball, wall );
+		
+		if( colliding ){
+			// objects are colliding, seperate and apply impulse.
+			
+		}// end if colliding
+		
+	}// end if in bound
+	
+	
+};// end ball wall collision
+
+
+
+/**	@Name: Check Boundng
+	@Brief:	Check if an objects bounding sphere is inside anothers.
+	@Arguments: 
+	objA - Three.mesh
+	objB - Three.mesh
+	@Returns:
+
+*/
+Collision_Manager.prototype.checkBounding = function( objA, objB ){
+	
 	var dist,rad1,rad2;
-	dist = this.getDistance( ball, wall );
-	rad1 = ball.boundRadius;
-	rad2 = wall.boundRadius;
+	dist = this.getDistance( objA, objB );
+	rad1 = objA.boundRadius;
+	rad2 = objB.boundRadius;
 	
 	if( dist < (rad1 + rad2) ){
 	
@@ -161,7 +261,10 @@ Collision_Manager.prototype.ballWall = function( ball, wall ){
 	}
 	
 	return false;
+
 };
+
+
 
 /**	@Name: Update
 	@Brief:	

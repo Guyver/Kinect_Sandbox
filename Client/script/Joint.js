@@ -12,7 +12,7 @@ function Joint( name ){
 	this._direction = new THREE.Vector3();		// Direction vector, maybe use a quaternion.
 	
 	// Set up the sphere vars
-	var radius = 10, segments = 10, rings = 10;
+	var radius = 100, segments = 10, rings = 10;
 	this._Material = new THREE.MeshLambertMaterial( {color: 0x000000 });
 	this._Geometry = new THREE.SphereGeometry( radius, segments, rings );
 	

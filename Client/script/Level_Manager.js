@@ -54,6 +54,33 @@ Level_Manager.prototype.update = function(  ){
 };
 
 
+Level_Manager.prototype.testPickups = function( player, objects ){
+	
+	if( player._inventory.length > 0 ){
+		// If the player has an item already then forget it.
+		return;
+	}
+	var lHand = player._rig._joint["LEFT_HAND"];
+	var rHand = player._rig._joint["RIGHT_HAND"];
+	var obj;
+	for ( index in objects){
+		//Test if the meshes collide.
+		obj = objects[ index ];
+		var coll1 = this._collision_Manager.sphereSphereCollision( lHand._mesh, obj._mesh );
+		var coll2 = this._collision_Manager.sphereSphereCollision( rHand._mesh, obj._mesh );	
+		
+		if( coll1 && coll2 ){
+			// Ok the hands are on/in an object, is it already equipped?
+			if( !objects[ index ]._equipped ){
+
+				player.addInventory( objects[ index ] );	// Add it to the players inventory.
+				objects[ index ].equipToMesh( rHand );		// Equip it to the right hands position.
+				
+			}//end if object equipped
+		}// end if coll1&2
+	}// End for objects
+};
+
 /**	@Name: Update
 	@Brief:	
 	Check all objects in the scene to see if any collisions occured.

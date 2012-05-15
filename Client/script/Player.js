@@ -53,7 +53,7 @@ function Player( name, position ){
 	// The url of the Avatar.
 	this._meshName = undefined;
 
-	this._model = this.loadModelMesh( 'model/monster.dae' );
+	//this._model = this.loadModelMesh( 'model/monster.dae' );
 
 	
 	// The data for the joints
@@ -130,9 +130,9 @@ Player.prototype.update = function( ){
 */	
 	// Apply the movements from the Kinect.
 	this.handleMovement();
-	this._model.position = this._position;
-	
-	this._model.children[0].children[0].position = this._position;
+	/*this._model.position = this._position;
+	this._model.scale( 0.1, 0.1 , 0.1 );
+	this._model.children[0].children[0].position = this._position;*/
 	this.syncJoints();
 	
 	if( this._kinectData == undefined ){
@@ -470,7 +470,7 @@ Player.prototype.loadModelMesh = function( url ){
 	what.load( url ,function( collada ){
 		
 		that._model = collada.scene;
-		that._model.scale.set(0.5,0.5,0.5);
+		that._model.scale.set(0.01,0.01,0.01);
 		that._model.position = that._position;
 		that._model.rotation.x = -Math.PI/2;
 		
