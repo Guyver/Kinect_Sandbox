@@ -62,30 +62,27 @@ Model.prototype.setAllJoints = function( playerPos, kinectMap ){
 	var translatedPos;
 	
 	// Cycle through the joints and set the according to the map.
-	for (var i =0; i < this._jointNames.length; i++){
+	for ( i in this._jointNames ){
 	
-		kinectPos = kinectMap[ this._jointNames[ i ] ]; //this._dummyMap[ this._jointNames[ i ] ];
-		
-		// it could be null if the kinect map is the action map instead of joints.
-		if( kinectPos !== undefined && kinectPos !== null )
-		{
-			// Get the new joint position.
-			translatedPos = this.translatePos( playerPos, kinectPos );
+		kinectPos = kinectMap[ this._jointNames[ i ] ];
+
+		// Get the new joint position.
+		translatedPos = this.translatePos( playerPos, kinectPos );
 			
-			// What if its under the floor?
-			while( translatedPos.y < 0 ){
+		// What if its under the floor?
+		while( translatedPos.y < 0 ){
 				
 				// Move the player position up.
-				playerPos.y +=1;
+			playerPos.y +=1;
 				
 				// Recalculate.
-				translatedPos = this.translatePos( playerPos, kinectPos );
-			}
-			
-			//Assign the new position to the graphical joint.
-			this._joint[ this._jointNames[ i ] ].setPosition(  
-				new THREE.Vector3( translatedPos.x, translatedPos.y, translatedPos.z ) );
+			translatedPos = this.translatePos( playerPos, kinectPos );
 		}
+			
+		//Assign the new position to the graphical joint.
+		this._joint[ this._jointNames[ i ] ].setPosition(  
+				new THREE.Vector3( translatedPos.x, translatedPos.y, translatedPos.z ) );
+				
 	}// End for
 	
 	// Return the player pos for the next iteration. 
@@ -120,7 +117,6 @@ Model.prototype.translatePos = function( playerPos, kinectPos ){
 	return ( newPos.add(  playerPos, kinectPos ) );
 			
 };
-
 
 
 

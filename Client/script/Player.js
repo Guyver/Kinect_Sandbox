@@ -76,6 +76,28 @@ function Player( name, position ){
 };
 
 
+/**	@name REMOVE( )
+
+	@brief
+	Remove the meshes associated with the Player.
+	
+	@args
+	
+	
+	@Returns
+	N/A
+*/
+Player.prototype.remove = function(  ){
+
+	//Remove all meshes from the scene associated with the player.
+	//Joint data.
+	this._rig.remove();
+	// Player Mesh.
+	scene.remove( this._mesh );
+	renderer.deallocateObject( this._mesh );
+};
+
+
 
 /**	@name SYNC JOINTS(  ) 
 
@@ -92,7 +114,7 @@ function Player( name, position ){
 Player.prototype.syncJoints = function( ){
 
 	// Update if there is something to update...
-	if ( this._kinectData !== undefined && this._kinectData !== null ){
+	if ( this._kinectData != undefined && this._kinectData != null ){
 	
 		// The new position represents the updated height, keeps feet from going throuh floor.
 		var newPosition = this._rig.setAllJoints( this._position , this._kinectData );		
@@ -130,9 +152,7 @@ Player.prototype.update = function( ){
 */	
 	// Apply the movements from the Kinect.
 	this.handleMovement();
-	/*this._model.position = this._position;
-	this._model.scale( 0.1, 0.1 , 0.1 );
-	this._model.children[0].children[0].position = this._position;*/
+	// Put the kinect joints in game space.
 	this.syncJoints();
 	
 	if( this._kinectData == undefined ){
@@ -161,27 +181,6 @@ Player.prototype.setPosition = function( pos ){
 };
 
 
-/**	@name REMOVE( )
-
-	@brief
-	Remove the meshes associated with the Player.
-	
-	@args
-	
-	
-	@Returns
-	N/A
-*/
-Player.prototype.remove = function(  ){
-
-	//Remove all meshes from the scene associated with the player.
-	//Joint data.
-	this._rig.remove();
-	// Player Mesh.
-	scene.remove( this._mesh );
-	renderer.deallocateObject( this._mesh );
-};
-
 
 /**	@name GET POSITION(  )
 
@@ -199,43 +198,6 @@ Player.prototype.getPosition = function(  ){
 
 	return ( this._position );
 };
-
-
-/**	@Name: MOVE
-
-	@Brief:When the player moves it should move the model.
-	The joint data and its own position also.
-	
-	@Arguments: Vector3 pos
-	A vector to translate the current position to.
-	
-	@Returns:
-	N/A
-*/
-Player.prototype.move = function( direction ){
-
-	// Move in the direction of the sight node.
-	var dir = new THREE.Vector3( this._sightNode.x - this._position.x, this._position.y, this._sightNode.z- this._position.z );
-	dir.normalize();
-	var dist = direction * this._walkSpeed;
-	var x = dist * dir.x;
-	var y = 0;// Move on the x z plane.
-	var z = dist * dir.z;
-	var newVec =  new THREE.Vector3( x,y,z )
-	
-	this._position.addSelf( newVec  );
-	this._sightNode.addSelf( newVec  );
-	
-	// Set the position of the mesh for the player.
-	this._mesh.position = this._position;
-	/*
-	// Update player position.
-	this._position.addSelf( pos );
-	// Keep the sight node in sync.
-	this._sightNode.addSelf( pos );
-	*/
-};
-
 
 
 /**	@Name:	Get Sight Node
@@ -296,6 +258,54 @@ Player.prototype.addInventory = function( item ) {
 	
 	this._inventory.push( item );	
 
+};
+
+
+/** @Name: Remove Inventory 
+
+
+*/
+Player.prototype.removeInventory = function( ) {
+	
+	this._inventory[0].removeFromMesh();
+	this._inventory.pop();
+
+};
+
+
+/**	@Name: Move
+
+	@Brief:When the player moves it should move the model.
+	The joint data and its own position also.
+	
+	@Arguments: Vector3 pos
+	A vector to translate the current position to.
+	
+	@Returns:
+	N/A
+*/
+Player.prototype.move = function( direction ){
+
+	// Move in the direction of the sight node.
+	var dir = new THREE.Vector3( this._sightNode.x - this._position.x, this._position.y, this._sightNode.z- this._position.z );
+	dir.normalize();
+	var dist = direction * this._walkSpeed;
+	var x = dist * dir.x;
+	var y = 0;// Move on the x z plane.
+	var z = dist * dir.z;
+	var newVec =  new THREE.Vector3( x,y,z )
+	
+	this._position.addSelf( newVec  );
+	this._sightNode.addSelf( newVec  );
+	
+	// Set the position of the mesh for the player.
+	this._mesh.position = this._position;
+	/*
+	// Update player position.
+	this._position.addSelf( pos );
+	// Keep the sight node in sync.
+	this._sightNode.addSelf( pos );
+	*/
 };
 
 

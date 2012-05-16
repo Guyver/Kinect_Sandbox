@@ -164,6 +164,7 @@ socket.sockets.on( 'connection', function( client ){
 		console.log( "Update my kinect request on server");
 		
 		if( users[ ip ] !== undefined ){
+		
 			client.emit('syncKinect', users[ ip ].kinect );
 		}
 		else

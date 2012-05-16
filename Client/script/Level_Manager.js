@@ -23,6 +23,7 @@ function Level_Manager(  ){
 	this._player_Manager = new Player_Manager();
 	// Handle the Scene.
 	//this._scene_Manager = new Scene_Builder( this._maxLevels, this._currentLevel );
+	this._cameraPosition = undefined;
 
 };
 
@@ -36,8 +37,10 @@ function Level_Manager(  ){
 	N/A
 
 */
-Level_Manager.prototype.update = function(  ){
+Level_Manager.prototype.update = function( player, objects, camera ){
 
+	// Test to see if the players hands are in an object.
+	this.testPickups( player, objects );
 	
 	// Get the collision manager to do its job.
 	this._collision_Manager.update( );
@@ -45,6 +48,25 @@ Level_Manager.prototype.update = function(  ){
 	// Get the Player Manager to update the players.
 	this._player_Manager.update( );
 	
+	// Set the camera to the position of the head joint.
+	if( player._kinectData !== undefined && player._kinectData !== null ){
+		
+		if( player._kinectData[ "HEAD" ] != undefined ){
+			
+			var pos = player._rig._joint[ "HEAD" ].getPosition();
+			this._cameraPosition = new THREE.Vector3( pos );
+		
+			camera.position = this._cameraPosition;
+		}
+		
+	}
+	else{
+		var playerPos = player.getPosition();
+		camera.position.x = playerPos.x;
+		camera.position.y = playerPos.y;
+		camera.position.z = playerPos.z;
+	}
+	camera.lookAt( player.getSightNode() );
 	// Check the progress of the current level.
 	
 	// Advance a level if conditions are met.
@@ -69,7 +91,7 @@ Level_Manager.prototype.testPickups = function( player, objects ){
 		var coll1 = this._collision_Manager.sphereSphereCollision( lHand._mesh, obj._mesh );
 		var coll2 = this._collision_Manager.sphereSphereCollision( rHand._mesh, obj._mesh );	
 		
-		if( coll1 && coll2 ){
+		if( coll1 && coll2 && objects[ index ]._alive ){
 			// Ok the hands are on/in an object, is it already equipped?
 			if( !objects[ index ]._equipped ){
 
@@ -78,8 +100,27 @@ Level_Manager.prototype.testPickups = function( player, objects ){
 				
 			}//end if object equipped
 		}// end if coll1&2
-	}// End for objects
-};
+		else{//Either the left hand let go or trying to pick up a dead object or you're just not near it.
+		
+			// Hands dont touch this particular object, if he has it equipped drop it.
+			// Make sure you only drop the item you know is not in his inventory.
+			
+			for ( index in player._inventory ){
+			
+				var equippedItem = player._inventory[ index ]._mesh;
+				
+				if( equippedItem.id === objects[ index ]._mesh.id )
+				{
+					this.removeItemFromPlayer( player , objects[ index ] );					
+				}//End if id's are the same.
+				
+			}// End each equipped item.
+				
+		}//End if/else no collision.
+		
+	}// End for objects.
+	
+};//End function.
 
 /**	@Name: Update
 	@Brief:	
@@ -95,4 +136,16 @@ Level_Manager.prototype.testCollision = function( objA, scene ){
 	var walls = [];
 	
 	this._collision_Manager.testCollision( objA, scene  );
+};
+/**	@Name:	Remove Item From Player
+	@Brief:
+	@Arguments:
+	@Returns:
+
+*/
+Level_Manager.prototype.removeItemFromPlayer = function( player, object ){
+
+	object.removeFromMesh();
+	player.removeInventory();	
+
 };

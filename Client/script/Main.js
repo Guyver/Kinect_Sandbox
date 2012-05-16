@@ -276,19 +276,11 @@ function gameLoop(){
 	// Test player wall collisions...
 	level_Manager.testCollision( player._mesh, scene );
 	
-	// Has an object been touched with both hands?
-	level_Manager.testPickups( player, objects );
+	level_Manager.update( player, objects, camera );
 	
 	// Initalise last for the 1st iteration.
 	if(!last)last= new Date();
 	
-	var playerPos = player.getPosition();
-	// Move the camera with the player.
-	camera.position.x = playerPos.x;
-	camera.position.y = playerPos.y;
-	camera.position.z = playerPos.z;
-	
-	camera.lookAt( player.getSightNode() );
 	// Find time now.
 	current = new Date();
 	
@@ -720,8 +712,7 @@ function handleKeyEvents( event ) {
 	  		break;
 		case 88:
 		// Fps
-			camera.position = player.getPosition();
-			camera.lookAt( player.getSightNode() );
+			player.removeInventory();
 	  		break;
 		case 90:
 		// Top down.
@@ -791,7 +782,10 @@ socket.on( 'updateHim', function( data ){
 socket.on('syncKinect', function( kinectData ){
 
 	if( kinectData !== null && kinectData !== undefined ){
+	
 		player._kinectData = kinectData;
+		player.update();
+		render();
 	}
 });
 

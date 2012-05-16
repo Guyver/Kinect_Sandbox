@@ -14,7 +14,7 @@ function Object( position ){
 	this._position = position ;
 	this._equipped = false;
 	this._owner = undefined;
-	this._alive = true;;
+	this._alive = true;
 	this._velocity = new THREE.Vector3( 0,0,0);
 	this._acceleration = new THREE.Vector3( 0,0,0);
 	this._direction = new THREE.Vector3( 0,0,0);
@@ -49,15 +49,22 @@ Object.prototype.equipToMesh = function( owner ){
 	this._equipped = true;
 };
 
+Object.prototype.removeFromMesh = function(){
+
+	this._owner = undefined;
+	this._equipped = false;
+	//this._alive = false;
+};
+
 Object.prototype.update = function(){
 
 	// If you run with it, you wil drop it.
 	
 	if( this._equipped ){
-	
-		this._position.x = this._owner.position.x;
-		this._position.y = this._owner.position.y;
-		this._position.z = this._owner.position.z;
+		
+		this._position.x = this._owner.getPosition().x;
+		this._position.y = this._owner.getPosition().y;
+		this._position.z = this._owner.getPosition().z;
 		// Offset from the center of the owner so we can see it.
 		this._position.y += 100;
 		this._position.z += 100;
