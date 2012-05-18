@@ -7,7 +7,7 @@
 */
 
 
-function Object( position ){
+function Object( position, type ){
 
 	this._id = undefined;
 	this._mesh = undefined;
@@ -18,10 +18,34 @@ function Object( position ){
 	this._velocity = new THREE.Vector3( 0,0,0);
 	this._acceleration = new THREE.Vector3( 0,0,0);
 	this._direction = new THREE.Vector3( 0,0,0);
+	this._type = type;		// Is is the bin or and object.
 	this.createMesh();
 };
 
 Object.prototype.createMesh = function(){
+
+	switch( this._type ){
+		case "Object":
+			this.createMoveable();
+			break;
+		case "Bin":
+			this.createDropzone();
+			break;
+		case "Stairs":
+			this.createStairs();
+			break;
+		default:
+			break;
+	
+	}
+};
+
+
+/*
+	Eventually add in the objects also.
+
+*/
+Object.prototype.createMoveable = function(){
 
 	var radius = 100, segments = 10, rings = 10;
 	var Material = new THREE.MeshLambertMaterial( {color: 0x000000 });
@@ -29,11 +53,28 @@ Object.prototype.createMesh = function(){
 	
 	// The mesh of the Joint. Contains physical properties.
 	this._mesh = new THREE.Mesh( Geometry , Material );	
-	this._mesh.name	= "Object";
+	this._mesh.name	= this._type;
 	// Add ourself to the scene.
 	scene.add( this._mesh );	
 	
 	this._mesh.position = this._position;
+
+};
+
+Object.prototype.createDropzone = function( ){
+	
+	var radius = 500, segments = 10, rings = 10;
+	var Material = new THREE.MeshLambertMaterial( {color: 0x00ff00 });
+	var Geometry = new THREE.CubeGeometry( 500,500,500 );
+	
+	// The mesh of the Joint. Contains physical properties.
+	this._mesh = new THREE.Mesh( Geometry , Material );	
+	this._mesh.name	= this._type;
+	// Add ourself to the scene.
+	scene.add( this._mesh );	
+	
+	this._mesh.position = this._position;
+
 
 };
 

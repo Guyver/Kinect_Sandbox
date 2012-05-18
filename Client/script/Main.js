@@ -13,7 +13,7 @@
 */
 
 // Connect to the server.
-var socket = io.connect('193.156.105.166:7541');
+var socket = io.connect('193.156.105.158:7541');
 
 // Variables for the sugary goodness!
 var gui, param, varNum, interval;
@@ -246,8 +246,13 @@ function createObjects(){
 	
 	for ( var i = 0; i < 5; i++ ){
 	
-		objects.push( new Object( new THREE.Vector3( 1000*i, 100, 5000 ) ) );	
+		objects.push( new Object( new THREE.Vector3( 1000*i, 100, 5000 ), "Object" ) );	
 	}		
+	
+	for ( var i = 0; i < 2; i++ ){
+	
+		objects.push( new Object( new THREE.Vector3( 1000*i, 250, 2000 ), "Bin" ) );	
+	}	
 }
 
 

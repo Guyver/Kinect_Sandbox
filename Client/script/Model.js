@@ -65,24 +65,28 @@ Model.prototype.setAllJoints = function( playerPos, kinectMap ){
 	for ( i in this._jointNames ){
 	
 		kinectPos = kinectMap[ this._jointNames[ i ] ];
-
-		// Get the new joint position.
-		translatedPos = this.translatePos( playerPos, kinectPos );
-			
-		// What if its under the floor?
-		while( translatedPos.y < 0 ){
-				
-				// Move the player position up.
-			playerPos.y +=1;
-				
-				// Recalculate.
+		
+		if ( kinectPos == undefined ){
+		
+			kinectPos = new THREE.Vector3(0,0,0);// Move the joints with the player position if the head is undefined.
+		}	
+			// Get the new joint position.
 			translatedPos = this.translatePos( playerPos, kinectPos );
-		}
-			
-		//Assign the new position to the graphical joint.
-		this._joint[ this._jointNames[ i ] ].setPosition(  
-				new THREE.Vector3( translatedPos.x, translatedPos.y, translatedPos.z ) );
 				
+			// What if its under the floor?
+			while( translatedPos.y < 0 ){
+					
+					// Move the player position up.
+				playerPos.y +=1;
+					
+					// Recalculate.
+				translatedPos = this.translatePos( playerPos, kinectPos );
+			}
+				
+			//Assign the new position to the graphical joint.
+			this._joint[ this._jointNames[ i ] ].setPosition(  
+					new THREE.Vector3( translatedPos.x, translatedPos.y, translatedPos.z ) );
+			
 	}// End for
 	
 	// Return the player pos for the next iteration. 

@@ -145,12 +145,12 @@ function loadResources(){
 	imageManager.queueDownload( 'img/target_blue.png' );
 	imageManager.queueDownload( 'img/target_red.png' );
 	imageManager.queueDownload( 'img/target_green.png' );	
-	imageManager.queueDownload( 'img/Kinect.png' );
+	/*imageManager.queueDownload( 'img/Kinect.png' );
 	imageManager.queueDownload( 'img/Left_Arm_Raised.png' );
 	imageManager.queueDownload( 'img/Pause.png' );
 	imageManager.queueDownload( 'img/Pick_up.png' );
 	imageManager.queueDownload( 'img/Reaching.png' );
-	imageManager.queueDownload( 'img/Right_Arm_Raised.png' );
+	imageManager.queueDownload( 'img/Right_Arm_Raised.png' );*/
 	imageManager.queueDownload( 'img/ground_plane.png' );
 	imageManager.queueDownload( 'img/floor.png' );
 	imageManager.downloadAll( onImagesComplete );

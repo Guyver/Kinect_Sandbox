@@ -333,11 +333,11 @@ Player.prototype.handleMovement = function(  ) {
 		
 		switch( state ){
 			case "walk":
-				this._walkSpeed = 50;
+				this._walkSpeed = 1;
 				this.move( 1 );
 				break;
 			case "run":
-				this._walkSpeed = 100;
+				this._walkSpeed = 3;
 				this.move( 1 );
 				break;
 			case "rotateLeft":
@@ -350,7 +350,8 @@ Player.prototype.handleMovement = function(  ) {
 				// Do nowt!
 				break;
 			case "backwards":
-				this._walkSpeed = -50;
+				this._walkSpeed = 1;
+				this.move( -1 );
 				break;
 			default:
 				break;
