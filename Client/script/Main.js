@@ -233,14 +233,8 @@ function createObjects(){
 	
 	var my_scene = {
 				"map" : [
-					"## ##### ##### #### ###",
-					"#    #     #     #    #",
-					"#    #     #     #    #",
-					"# P                   #",
-					"#    #     #     #    #",
-					"#    #     #     #    #",
-					"## ##### ##### #### ###"
-				] 
+					"##"
+					] 
 	};
 			
 	architect = new Scene_Builder( my_scene );
@@ -403,13 +397,18 @@ function setupEnviornment(){
 	//
 	// Create Plane
 	//
+	/*
 	
-	var planeTex = new THREE.Texture(imageManager.getAsset('img/floor.png', {}, render()));
+	imageManager.queueDownload( 'img/Proxy_Grass.png' );
+	imageManager.queueDownload( 'img/grassTile01.png' );
+	
+	*/
+	var planeTex = new THREE.Texture(imageManager.getAsset('img/grassTile01.png', {}, render()));
 	
 	planeTex.needsUpdate = true;
 	planeTex.wrapT = THREE.RepeatWrapping;
 	planeTex.wrapS = THREE.RepeatWrapping;
-	planeTex.repeat.set( 100, 100 );
+	planeTex.repeat.set( 1000, 1000 );// Higher for smaller tiles
 	
 	var planeGeo = new THREE.PlaneGeometry(100000, 100000, 1, 10);
 	

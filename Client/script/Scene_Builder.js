@@ -51,9 +51,12 @@ Scene_Builder.prototype.createScene = function( data ){
         }
 		
 		//yPosition = this._blockSize;
-		
+		/*
+		imageManager.queueDownload( 'img/metallica.png' );
+		imageManager.queueDownload( 'img/wallTexture.png' );
+		*/
         // Create a texture from an image, image mush be a power of 2 in size. i.e 512*256
-		var texture_blue = new THREE.Texture(imageManager.getAsset('img/target_blue.png', {}, render()));
+		var texture_blue = new THREE.Texture(imageManager.getAsset('img/wallTexture.png', {}, render()));
 		// Oh yes, it does need this!
 		texture_blue.needsUpdate = true;
 	
