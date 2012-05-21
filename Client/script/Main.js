@@ -47,6 +47,8 @@ var architect;
 
 // Debugging Variable.
 var test;
+var loop = 0;
+var server =0;
 
 
 /**	@Name:	Init
@@ -227,7 +229,6 @@ function createObjects(){
 				'RIGHT_SHOULDER',
 				'TORSO'];
 				
-	socket.emit( 'test' );	
 	player = new Player( "Default", new THREE.Vector3( 1000 , 100 ,1000 ) );
 	
 	var my_scene = {
@@ -246,12 +247,12 @@ function createObjects(){
 	
 	for ( var i = 0; i < 5; i++ ){
 	
-		objects.push( new Object( new THREE.Vector3( 1000*i, 100, 5000 ), "Object" ) );	
+		objects.push( new Object( new THREE.Vector3( 1000*i, 1500, 5000 ), "Object" ) );	
 	}		
 	
 	for ( var i = 0; i < 2; i++ ){
 	
-		objects.push( new Object( new THREE.Vector3( 1000*i, 250, 2000 ), "Bin" ) );	
+		objects.push( new Object( new THREE.Vector3( 2000*i, 250, 2000 ), "Bin" ) );	
 	}	
 }
 
@@ -299,7 +300,7 @@ function gameLoop(){
 	render();
 	
 	// Get the kinect data for the next frame.
-	socket.emit( 'updateKinect', player._ip );
+	socket.emit( 'updateKinect' );
 }
 
 
@@ -534,30 +535,7 @@ function Skybox(){
 	@Returns:N/A
 */
 function syncUsers() {  
-	/*
-	if( updateSelf !== undefined ){
 	
-		player.setPosition( updateSelf.pos );
-		player._name = updateSelf.name;
-	}
-	// Players to be added to the scene.
-	while ( playersToBeAdded.length > 0 ){
-	
-		var playerData = playersToBeAdded.pop();
-		var ipAddress = playerData.ip;
-		
-		if( players === undefined ){	
-			// Initalise players.
-			players = [];		
-		}
-		// Create a new player and add it to the scene.
-		players.push( { ipAddress : new Player( playerData.name, playerData.position ) } );		
-	}// End while
-	
-	//
-	//	Update to current positions.
-	//
-	*/
 } //End sync Users
 
 
@@ -670,7 +648,6 @@ function randomRange(min, max) {
 
 
 
-
 /**	@Name:	Handle Key Events.
 	@Brief:	Called from the dom's mouse down event listener.
 	@Arguments: event object.
@@ -680,7 +657,7 @@ function handleKeyEvents( event ) {
 	
 	var key = event.keyCode;
 	var update = true;
-	socket.emit( 'test' );
+	
 	switch( key ){
 		
 		case 38:
@@ -693,23 +670,26 @@ function handleKeyEvents( event ) {
 	  		break;
 		case 37:
 	  		// Move Left
-			//player.move( new THREE.Vector3( 0,0,100 ) );
+			player.move( new THREE.Vector3( 0,0,100 ) );
 	  		break;
 		case 39:
 	  		// Move Right
-			//player.move( new THREE.Vector3( 0,0,-100 ) );
+			player.move( new THREE.Vector3( 0,0,-100 ) );
 	  		break;
 		case 65:
 	  		// Rotate Left
 			player.rotateLeft();
+			//testOne( player._sightNode, player._position );
 	  		break;
 		case 68:
 	  		// Rotate Right
 			player.rotateRight();
+			//testTwo( player._sightNode, player._position  );
 	  		break;
 		case 87:
 	  		// Rotate up
 			player.rotateUp();
+			//testThree( player._sightNode, player._position  );
 	  		break;
 		case 83:
 	  		// Rotate Down
@@ -731,19 +711,80 @@ function handleKeyEvents( event ) {
 	}
 	
 	var map = { 
-			name : player._name,
-			id	: player._userId,
 			pos : player.getPosition(), 
-			kinect : player._kinectData, // Which co ordinate system is this in?
 			ip : player._ip,
-			mesh : player._meshName,
-			visible : player._visible 
 		};
+		
 	if( update ){
 		socket.emit('updateMe', map	);
-	}
-	
+	}	
 }
+
+
+function testOne( vec1, vec2 ){
+	
+	var theta = 0.1;
+	// Translate to point of rotation.
+	vec1.subSelf( vec2 );
+	vec1.normalise();
+	// About z
+	vec1.x = ( Math.cos( theta ) - Math.sin( theta ) + 0 ) * vec1.x; 
+	vec1.y = ( Math.sin( theta ) + Math.cos( theta ) + 0 ) * vec1.y;
+	vec1.z = ( 			0 		 + 			0 		 + 1 ) * vec1.z 	
+	
+	// Translate...back.
+	vec1.addSelf( vec2 );
+	
+	return vec1;
+
+};
+function testTwo( vec1, vec2 ){
+	
+	var theta = 0.1;
+	// Translate to point of rotation.
+	vec1.subSelf( vec2 );
+	vec1.normalise();
+	// About y
+	vec1.x = ( Math.cos( theta ) + 0 + Math.sin( theta ) ) * vec1.x; 
+	vec1.y = ( 			0 		 + 1 + 			0 		 ) * vec1.y;
+	vec1.z = ( -Math.sin( theta )+ 0 + Math.cos( theta ) ) * vec1.z	
+	
+	// Translate...back.
+	vec1.addSelf( vec2 );
+	
+	return vec1;
+
+};
+function testThree( vec1, vec2 ){
+	
+	var theta = 0.1;
+	// Translate to point of rotation.
+	vec1.subSelf( vec2 );
+	vec1.normalise();
+	// About x
+	vec1.x = ( 1 + 			0 		 + 			0 		 ) * vec1.x; 
+	vec1.y = ( 0 + Math.cos( theta ) - Math.sin( theta ) ) * vec1.y;
+	vec1.z = ( 0 + Math.sin( theta ) + Math.cos( theta ) ) * vec1.z 	
+	
+	// Translate...back.
+	vec1.addSelf( vec2 );
+	
+	return vec1;
+
+};
+function testFour( vec1, vec2 ){
+	
+	var theta = 0.1;
+	vec1.normalise();
+	vec2.normalise();
+	// Translate to point of rotation.
+	vec1
+	
+	
+	return vec1;
+
+};
+
 
 
 socket.on( 'heresPlayersFromServer', function( data ) {
@@ -778,19 +819,29 @@ socket.on( 'RegisterNewUser', function( data ){
 
 socket.on( 'updateHim', function( data ){
 
-	players[ data.ip ].setPosition( data.pos );
-	players[ data.ip ]._kinectData = data.kinect;
+	if( data.ip != player._ip ){
+		// A client has moved and needs to be updated.
+		players[ data.ip ].setPosition( data.pos );
+		players[ data.ip ]._kinectData = data.kinect;
+	}
+
 });
 
 
 
-socket.on('syncKinect', function( kinectData ){
+socket.on('syncKinect', function( users ){
 
-	if( kinectData !== null && kinectData !== undefined ){
-	
-		player._kinectData = kinectData;
-		player.update();
-		render();
+	// for all the users in the server.
+	for ( ip in users ){
+		// If the current user is me...
+		if( player._ip == users[ ip ].ip ){
+			// Store my new kinect data.
+			player._kinectData = users[ ip ].kinect;
+		}
+		else{// If the current user is another client.
+			// Find him in the local client list and store his kinect data.
+			players[ ip ]._kinectData = users[ ip ].kinect;
+		}	
 	}
 });
 
@@ -807,14 +858,6 @@ socket.on( 'deleteHim', function( data ){
 	delete players[ data.ip ];
 	console.log( " The user %s has left the game. ", data.ip );
 });
-
-
-
-socket.on( 'test', function( data ){
-		
-	var dummy = data;	
-});
-
 
 
 /**	@Name:	Resize

@@ -21,10 +21,8 @@ function Model( jointNames, playerPos ){
 		
 		// Give it a random position.
 		this._joint[ this._jointNames[ i ] ].setPosition(  new THREE.Vector3( 
-			playerPos.x, playerPos.y+100, playerPos.z
-		));
-		//this._dummyMap[ this._jointNames[ i ] ] = this._joint[ this._jointNames[ i ] ].getPosition()
-		
+			playerPos.x, playerPos.y, playerPos.z
+		));		
 	}
 }
 
@@ -50,6 +48,8 @@ Model.prototype.setJointPosition = function( name, pos ){
 
 /**	@Name:
 	@Brief:	
+	Orientation will have to be applied in here.
+	The joints must be drawn to face the sight node.
 	@Arguments:
 	@Returns:
 
@@ -137,11 +137,43 @@ Model.prototype.getPosition = function(  ){
 };
 
 
+/**	@Name:
 
+*/
 Model.prototype.remove = function(){
 	
 	//Remove all joints from the scene.
 	for ( index in this._joint ){
 		this._joint[ index ].remove();
 	}
+}
+
+
+
+/**	@Name:
+	Rotate the model about its torso.
+	This is called for each joint as it has a different angle of rotation for each.
+	
+*/
+Model.prototype.rotateJoints = function( sightNode ){
+	
+	var center = this._joints[ "TORSO" ];
+	var joint;
+	
+	for( j in this._joints ){
+	
+		joint = this._joints[ j ].getPosition();
+		
+		// Get the joint vector.
+		joint.subSelf( center );
+		
+		// Rotate about the z
+		joint.x = joint.x * Math.cos( theta ) + Math.sin( theta ) * joint.z; 
+		joint.z = joint.z * Math.cos( theta ) - Math.sin( theta ) * joint.x 
+	
+		// Translate back to new position.
+		joint.addSelf( center );
+		
+	}
+	
 }

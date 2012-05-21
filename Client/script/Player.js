@@ -33,11 +33,11 @@ function Player( name, position ){
 	// The acceleration...
 	this._accel = new THREE.Vector3(0,-9.81,0);
 	// The walkspeed, could replace velocity.
-	this._walkSpeed = 50;
+	this._walkSpeed = 10;
 	// The direction of the player.
 	this._direction = new THREE.Vector3(0,0,1);
 	// Move 100 units in the z direction, this is the players orientation.
-	this._sightNode = new THREE.Vector3(0,0,100);
+	this._sightNode = new THREE.Vector3(0,0,1000);
 	// Define the up axis on the cartesian plane.
 	this._upAxis = new THREE.Vector3( 0,0,1 );
 	// The unique id, i.p address for Example.
@@ -236,7 +236,7 @@ Player.prototype.setSightNode = function( theta ) {
 	// Rotate up and down
 	this._sightNode.x = this._sightNode.x * Math.cos( theta ) + Math.sin( theta ) * this._sightNode.z; 
 	this._sightNode.z = this._sightNode.z * Math.cos( theta ) - Math.sin( theta ) * this._sightNode.x 
-	
+	this._sightNode.y = 500;
 	// Translate...sight + playerPos
 	this._sightNode.addSelf( this._position );
 	
@@ -277,6 +277,7 @@ Player.prototype.removeInventory = function( ) {
 
 	@Brief:When the player moves it should move the model.
 	The joint data and its own position also.
+	Move the 
 	
 	@Arguments: Vector3 pos
 	A vector to translate the current position to.
@@ -323,6 +324,7 @@ Player.prototype.handleMovement = function(  ) {
 	
 	// Process all the states to be applied to the Player.
 	var state = undefined;
+	var needsUpdate = true;
 	
 	for ( index in this._kinectData ){
 		
@@ -333,33 +335,116 @@ Player.prototype.handleMovement = function(  ) {
 		
 		switch( state ){
 			case "walk":
-				this._walkSpeed = 1;
-				this.move( 1 );
+				this._walkSpeed = 0.5;
+				//this.move( 1 );
+				this.moveModel( 1 );
+				console.log( state );
 				break;
 			case "run":
-				this._walkSpeed = 3;
-				this.move( 1 );
+				this._walkSpeed = 1;
+				this.moveModel( 1 );
+				console.log( state );
 				break;
 			case "rotateLeft":
-				this.rotateLeft();
+				//this.rotateLeft();
+				this.rotateModelLeft();
+				console.log( state );
 				break;
 			case "rotateRight":
-				this.rotateRight();
+				//this.rotateRight();
+				this.rotateModelRight();
+				console.log( state );
 				break;
 			case "standStill":
+				console.log( state );
 				// Do nowt!
 				break;
 			case "backwards":
-				this._walkSpeed = 1;
-				this.move( -1 );
+				this._walkSpeed = 0.5;
+				//this.move( -1 );
+				this.moveModel( -1 );
+				console.log( state );
 				break;
 			default:
+				needsUpdate = false;
 				break;
 		}//End Switch
 		
 	}// End for 
+	
+	var map = { 
+			pos : this._position, 
+			ip : 	this._ip,
+		};
+		
+	if( needsUpdate ){
+		socket.emit('updateMe', map	);
+	}	
+};
+
+
+Player.prototype.rotateModelLeft = function( ){
+
+	theta = -0.01;
+	// Move the sight node around the torso.
+	var pos = new THREE.Vector3( 0,0,0 );
+	var torso = this._rig._joint[ "TORSO"].getPosition();
+	pos = new THREE.Vector3( torso.x , torso.y , torso.z );
+	
+	// Translate...sight - player pos
+	this._sightNode.subSelf( pos );
+	
+	// Rotate up and down
+	this._sightNode.x = this._sightNode.x * Math.cos( theta ) + Math.sin( theta ) * this._sightNode.z; 
+	this._sightNode.z = this._sightNode.z * Math.cos( theta ) - Math.sin( theta ) * this._sightNode.x 
+
+	// Translate...sight + playerPos
+	this._sightNode.addSelf( pos );
+	
+	// After you rotate the sight node, rotate all the joints to face it.
+	//this._rig.rotateJoints( this._sightNode );
+};
+
+Player.prototype.rotateModelRight = function( ){
+
+	theta = 0.01;
+	// Move the sight node around the torso.
+	var pos = new THREE.Vector3( 0,0,0 );
+	var torso = this._rig._joint[ "TORSO"].getPosition();
+	pos = new THREE.Vector3( torso.x , torso.y , torso.z );
+	
+	// Translate...sight - player pos
+	this._sightNode.subSelf( pos );
+	
+	// Rotate up and down
+	this._sightNode.x = this._sightNode.x * Math.cos( theta ) + Math.sin( theta ) * this._sightNode.z; 
+	this._sightNode.z = this._sightNode.z * Math.cos( theta ) - Math.sin( theta ) * this._sightNode.x 
+
+	// Translate...sight + playerPos
+	this._sightNode.addSelf( pos );
+};
+
+Player.prototype.moveModel = function( direction ){
+	
+	var torso = this._rig._joint[ "TORSO"].getPosition();
+	// Move in the direction of the sight node.
+	var dir = new THREE.Vector3( this._sightNode.x - torso.x, torso.y, this._sightNode.z- torso.z );
+	dir.normalize();
+	var dist = direction * this._walkSpeed;
+	var x = dist * dir.x;
+	var y = 0;// Move on the x z plane.
+	var z = dist * dir.z;
+	
+	var newVec =  new THREE.Vector3( x,y,z )
+	
+	this._position.addSelf( newVec  );
+	this._sightNode.addSelf( newVec  );
+	
+	// Set the position of the mesh for the player.
+	this._mesh.position = this._position;
 
 };
+
 
 
 /**	@Name:	Rotate Left
@@ -374,16 +459,25 @@ Player.prototype.handleMovement = function(  ) {
 */
 Player.prototype.rotateLeft = function( ) {
 
-	theta = 0.1;
+	var pos = new THREE.Vector3( 0,0,0 );
+	
+	if( this._kinectData != undefined ){
+	
+		pos = new THREE.Vector3( this._kinectData[ "HEAD"].x , this._kinectData[ "HEAD"].y , this._kinectData[ "HEAD"].z );
+	}
+	else{
+		pos = this._position;
+	}
+	theta = -0.01;
 	// Translate...sight - player pos
-	this._sightNode.subSelf( this._position );
+	this._sightNode.subSelf( pos );
 	
 	// Rotate up and down
 	this._sightNode.x = this._sightNode.x * Math.cos( theta ) + Math.sin( theta ) * this._sightNode.z; 
 	this._sightNode.z = this._sightNode.z * Math.cos( theta ) - Math.sin( theta ) * this._sightNode.x 
-	
+	//this._sightNode.y = 250;
 	// Translate...sight + playerPos
-	this._sightNode.addSelf( this._position );
+	this._sightNode.addSelf( pos );
 };
 
 
@@ -399,16 +493,23 @@ Player.prototype.rotateLeft = function( ) {
 */
 Player.prototype.rotateRight = function( ) {
 
-	theta = -0.1;
+	var pos = new THREE.Vector3( 0,0,0 );
+	if( this._kinectData != undefined ){
+		pos = new THREE.Vector3( this._kinectData[ "HEAD"].x , this._kinectData[ "HEAD"].y , this._kinectData[ "HEAD"].z );
+	}
+	else{
+		pos = this._position;
+	}
+	theta = 0.01;
 	// Translate...sight - player pos
-	this._sightNode.subSelf( this._position );
+	this._sightNode.subSelf( pos );
 	
 	// Rotate up and down
 	this._sightNode.x = this._sightNode.x * Math.cos( theta ) + Math.sin( theta ) * this._sightNode.z; 
 	this._sightNode.z = this._sightNode.z * Math.cos( theta ) - Math.sin( theta ) * this._sightNode.x 
-	
+	//this._sightNode.y = 250;
 	// Translate...sight + playerPos
-	this._sightNode.addSelf( this._position );
+	this._sightNode.addSelf( pos );
 };
 
 
@@ -424,7 +525,7 @@ Player.prototype.rotateRight = function( ) {
 */
 Player.prototype.rotateUp = function( ) {
 
-	theta = 0.1;
+	theta = 0.01;
 	// Translate...sight - player pos
 	this._sightNode.subSelf( this._position );
 	

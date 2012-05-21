@@ -16,7 +16,7 @@ var server = http.createServer( function ( request , response ) {
     var filePath = '.' + request.url;
 
     if ( filePath == './' ){// Just the root, localtion of server.js. Will only enter here initally.
-        filePath = './home.htm';// Serve html page.
+        filePath = './index.htm';// Serve html page.
 	}
 	
     var extname = path.extname( filePath );
@@ -92,10 +92,9 @@ socket.sockets.on( 'connection', function( client ){
 	
 	//				(1)
 	// GET PLAYERS, SEND TO JUST ME.
-	//
+	// ****** Only happens upon connection to the server. ******
 	client.on('getPlayers', function() {
 		
-		// Why in gods name do I have to do this shit?
 		var test = {};
 		var count=0;
 		for ( index in users){
@@ -103,15 +102,16 @@ socket.sockets.on( 'connection', function( client ){
 			test[ count ] = users[ index ];
 		
 		}
-
-		client.emit( 'heresPlayersFromServer', test );// Whys is this null!?
+		
+		// Send the new client all the connected users.
+		client.emit( 'heresPlayersFromServer', test );
 
 	});
 	
 	
 	// 				(2)
-	// STORE ME AS A USER, TELL EVERYONE INCLUDING ME COS I NEED MY IP.
-	//	
+	// STORE ME AS A USER.
+	//	******* Only happens once when the player sends a template for the server to fill in and store him here********
 	client.on('registerMeInServer', function( data ){
 		console.log("Register Me In Server was called on the server.");
 		
@@ -123,54 +123,59 @@ socket.sockets.on( 'connection', function( client ){
 		"id":undefined,
 		"meshName":undefined
 		};
-	
+		
+		// Store me in the map format.
 		users[ client.handshake.address.address ] =  map ;	
 
+		// Return my profile to me.
 		client.emit( 'registerSelf', { player : users[ client.handshake.address.address ] } );
 		
-		socket.sockets.emit( 'RegisterNewUser', { player:users[ client.handshake.address.address ], ip:client.handshake.address.address }  );
+		// Tell previously connected users a player connected and pass his profile to them. Don't send to self.
+		client.broadcast.emit( 'RegisterNewUser', { player:users[ client.handshake.address.address ], ip:client.handshake.address.address }  );
 	});
 	
 	
 	// 				(3)
 	// UPDATE ME AND TELL EVERYONE BUT ME.
-	//
+	//***** Called from the onclick function in the game *****		HMM I DUNNO DAVID!
 	client.on( 'updateMe', function( me ) {
 	
 		console.log("Update me was called on the server.");
 		
+		// Find the user in the data structure.
 		if( users[ me.ip ] !== undefined){
-		
+			
+			// If he exists, store my position.
 			users[ me.ip ].pos = me.pos;
-			//users[ me.ip ].kinect = me.kinect;
+			
+			// Send my new position to everyone else connected, not me.
+			client.broadcast.emit( 'updateHim', users[ me.ip] );
 		}
 		else
 		{
+			// If I dont exist somehow, fire a message.
 			console.log( " Unregistered user "+ me.ip );return;		
 		}
-		
-		socket.sockets.send( 'updateHim', users[ me.ip] );
-		socket.sockets.emit( 'updateHim', users[ me.ip] );		// Send to everyone, including me.
-		socket.sockets.send( 'updateHim', users[ me.ip] );	    // Send to everyone but me.
-		client.emit( 'updateHim', users[ me.ip] );				// Send to just me.
 
 	});
 	
 	
 	//			(3A)
 	// GIVE ME MY KINECT DATA YOU SOB!
-	//
-	client.on( 'updateKinect', function( ip ) {
+	//***** Called every game frame ******
+	client.on( 'updateKinect', function( ) {
 		console.log( "Update my kinect request on server");
 		
-		if( users[ ip ] !== undefined ){
+			var test = {};
+		var count=0;
+		for ( index in users){
+			count++;
+			test[ count ] = users[ index ];
 		
-			client.emit('syncKinect', users[ ip ].kinect );
 		}
-		else
-		{
-			console.log( "Not sending kinect data...The user isn't registered yet." );
-		}
+		// Return the users kinect data.
+		client.emit('syncKinect', test );
+			
 	});
 	
 	

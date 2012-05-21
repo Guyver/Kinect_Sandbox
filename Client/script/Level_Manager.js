@@ -56,9 +56,11 @@ Level_Manager.prototype.update = function( player, objects, camera ){
 		if( player._kinectData[ "HEAD" ] != undefined ){// If the head is defined, attach the camera to it.
 			
 			var pos = player._rig._joint[ "HEAD" ].getPosition();
-			this._cameraPosition = new THREE.Vector3( pos );
+			this._cameraPosition = new THREE.Vector3( pos.x, pos.y, pos.z );
 		
-			camera.position = this._cameraPosition;
+			camera.position.x = this._cameraPosition.x;
+			camera.position.y = this._cameraPosition.y;
+			camera.position.z = this._cameraPosition.z;
 		}	
 		else// The kinect isnt initiated, let the camera follow the player position.
 		{
@@ -76,16 +78,10 @@ Level_Manager.prototype.update = function( player, objects, camera ){
 		var playerPos = player.getPosition();
 		camera.position.x = playerPos.x;
 		camera.position.y = playerPos.y;
-		camera.position.z = playerPos.z;
-		
+		camera.position.z = playerPos.z;		
 	}
 	
 	camera.lookAt( player.getSightNode() );
-	// Check the progress of the current level.
-	
-	// Advance a level if conditions are met.
-	
-	// Get the Scene Builder to construct the new level.
 	
 };
 
@@ -128,7 +124,7 @@ Level_Manager.prototype.testPickups = function( player, objects ){
 					
 					if( equippedItem.id === objects[ index ]._mesh.id )
 					{
-						this.removeItemFromPlayer( player , objects[ index ] );					
+						//this.removeItemFromPlayer( player , objects[ index ] );					
 					}//End if id's are the same.
 					
 				}// End each equipped item.

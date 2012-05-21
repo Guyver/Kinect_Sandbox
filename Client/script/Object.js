@@ -47,8 +47,8 @@ Object.prototype.createMesh = function(){
 */
 Object.prototype.createMoveable = function(){
 
-	var radius = 100, segments = 10, rings = 10;
-	var Material = new THREE.MeshLambertMaterial( {color: 0x000000 });
+	var radius = 300, segments = 10, rings = 10;
+	var Material = new THREE.MeshLambertMaterial( {color: 0xff00ff });
 	var Geometry = new THREE.SphereGeometry( radius, segments, rings );
 	
 	// The mesh of the Joint. Contains physical properties.
