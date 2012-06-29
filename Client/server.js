@@ -7,8 +7,41 @@ var fs = require('fs');
 // Validates the existance of files.
 var path = require('path');
 // Sockets
-var io = require('./lib/socket.io');		
+var io = require('./lib/socket.io');
 
+// 4 players per room. Each room has no knowledge of other rooms.
+// Each room has their own game logic and win conditions.
+var rooms = [];	
+var game = "Reach";
+var game2 = "Walk";	
+
+/*
+	Action: start/stop/autoAdjust/changeLed/changeTilt
+	Type : skeleton/motor/pose/movement/hug/gameControl/reachPickUp/pichUpFromSides/all
+	
+	Types can be started together by not stopping the previous one.
+
+*/
+
+// To begin reaching game.
+var kinectDemands = {
+	device:"kinect",
+	action:"start",
+	type:"skeleton"
+}/*
+// To stop reaching game
+kinectDemands = {
+	device:"kinect",
+	action:"stop",
+	type:"skeleton"
+}
+// 
+kinectDemands = {
+	device:"kinect",
+	action:"start",
+	type:"all"
+}
+*/
 var server = http.createServer( function ( request , response ) {
  
     console.log('request starting...');
@@ -114,14 +147,17 @@ socket.sockets.on( 'connection', function( client ){
 	//	******* Only happens once when the player sends a template for the server to fill in and store him here********
 	client.on('registerMeInServer', function( data ){
 		console.log("Register Me In Server was called on the server.");
-		
+
 		// Construct a map from the new player.
-		var map = { "name": "Bot",
-		"pos":data.pos,
-		"ip":client.handshake.address.address,
-		"kinect":undefined,
-		"id":undefined,
-		"meshName":undefined
+		var map = { 
+		
+			"name": data.name,
+			"pos":data.pos,
+			"ip":client.handshake.address.address,
+			"kinect":data.kinect,
+			"id": data.id,
+			"meshName":data.mesh,
+			"visible": data.visible
 		};
 		
 		// Store me in the map format.
@@ -166,15 +202,15 @@ socket.sockets.on( 'connection', function( client ){
 	client.on( 'updateKinect', function( ) {
 		console.log( "Update my kinect request on server");
 		
-			var test = {};
+		var temp = {};
 		var count=0;
 		for ( index in users){
 			count++;
-			test[ count ] = users[ index ];
+			temp[ count ] = users[ index ];
 		
 		}
 		// Return the users kinect data.
-		client.emit('syncKinect', test );
+		client.emit('syncKinect', temp );
 			
 	});
 	
@@ -235,23 +271,19 @@ javaServer.on('close', function () {
 javaServer.on('connection', function ( javaSocket ) {
 
 	var remote_address = javaSocket.remoteAddress;
+	for( var i = 0; i< 1000; i++)
 	console.log( "An interface connected to stream traffic on : "+ remote_address );
 	
 	var interfaceIpAddress = remote_address;
-
-	var count = 1;
 	
 	for( index in users ){
 		
-		if( users[ index ].ip == remote_address ){
+		//if( users[ index ].ip == remote_address ){
+		if( true ){
 		
 			console.log(" We found the corresponding client, %s .",users[ index ].ip );
-			// First or second user per device.
-			users[ index ].id = count;
-			// 1 PERSON PER PC?
-			count++;
 			// We're ready to stream. When the library gets a '\n' it begins to send the data...
-			javaSocket.write( '\n' );
+			javaSocket.write( kinectDemands );
 			break;
 		}
 		else
@@ -269,16 +301,17 @@ javaServer.on('connection', function ( javaSocket ) {
 		newlineIndex = dataBuffer.indexOf( '\n' );
 		
 		if( newlineIndex == -1){
+		
 			// Send next packet.
-			javaSocket.write( '\n' );
+			javaSocket.write( 'continue' );
 			return;// If there was no end of package in the data return.
 		}
-		
 		// Store the kinect data locally on the server.
 		users[ javaSocket.remoteAddress ].kinect = JSON.parse( dataBuffer.slice(0, newlineIndex) );
 		users[ javaSocket.remoteAddress ].visible = true;
+
         dataBuffer = dataBuffer.slice(newlineIndex + 1);	
-		javaSocket.write( '\n' );
+		javaSocket.write( 'continue' );
 		
 	});// End of on.Data
 

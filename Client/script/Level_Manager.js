@@ -55,12 +55,21 @@ Level_Manager.prototype.update = function( player, objects, camera ){
 		
 		if( player._kinectData[ "HEAD" ] != undefined ){// If the head is defined, attach the camera to it.
 			
-			var pos = player._rig._joint[ "HEAD" ].getPosition();
-			this._cameraPosition = new THREE.Vector3( pos.x, pos.y, pos.z );
-		
+			var pos = player._rig._joint[ "HEAD" ].getPosition();			
+			this._cameraPosition = new THREE.Vector3( pos.x , pos.y , pos.z );
+			
+			
+			/*
+			var playerPos = player.getPosition();
+			camera.position.x = playerPos.x +5000;
+			camera.position.y = playerPos.y +5000;
+			camera.position.z = playerPos.z;
+			
+			*/
 			camera.position.x = this._cameraPosition.x;
 			camera.position.y = this._cameraPosition.y;
 			camera.position.z = this._cameraPosition.z;
+			
 		}	
 		else// The kinect isnt initiated, let the camera follow the player position.
 		{
@@ -81,7 +90,9 @@ Level_Manager.prototype.update = function( player, objects, camera ){
 		camera.position.z = playerPos.z;		
 	}
 	
-	camera.lookAt( player.getSightNode() );
+	var sightVector = player.getSightNode();// - camera.position;
+	camera.lookAt( sightVector );
+	//camera.lookAt( playerPos );
 	
 };
 

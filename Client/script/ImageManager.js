@@ -24,8 +24,6 @@ function ImageManager() {
 }
 
 
-
-
 /**				QUEUE DOWNLOAD()
 
 	@Brief: Adds a url of an image to a queue to be downloaded.
@@ -37,8 +35,6 @@ ImageManager.prototype.queueDownload = function( path ) {
 
     this._downloadQueue.push( path );
 };
-
-
 
 
 /**				DOWNLOAD ALL() 
@@ -105,8 +101,6 @@ ImageManager.prototype.downloadAll = function( downloadCallback ) {
 }
 
 
-
-
 /**				GET ASSET()
 	@Brief:	Get an image for the manager using its url as a key.
 	@Arguments: path:- A string URL key to retrieve an image from the manager.
@@ -116,8 +110,6 @@ ImageManager.prototype.getAsset = function(path) {
 	
     return this._cache[path];
 };
-
-
 
 
 /**				IS DONE()
@@ -130,8 +122,6 @@ ImageManager.prototype.isDone = function() {
 	// Have the amount of successes and failures so far equalled the total to be processed.
     return (this._downloadQueue.length  == this._successNum + this._errorNum);
 };
-
-
 
 
 /**				LOAD RESOURCES()
@@ -153,11 +143,10 @@ function loadResources(){
 	imageManager.queueDownload( 'img/Right_Arm_Raised.png' );/**/
 	imageManager.queueDownload( 'img/ground_plane.png' );
 	imageManager.queueDownload( 'img/floor.png' );
+	imageManager.queueDownload( 'img/Tree1.png' );
 	imageManager.downloadAll( onImagesComplete );
 
 }
-
-
 
 
 /**				ON IMAGES COMPLETE()

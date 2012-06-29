@@ -13,7 +13,13 @@
 */
 
 // Connect to the server.
-var socket = io.connect('193.156.105.158:7541');
+var socket = io.connect('193.156.105.166:7541');
+
+// Connect to Sandra.
+//var local = io.connect('127.0.0.0.1:7540');
+
+// Connect to the social media Api. 
+//var socket = io.connect('127.0.0.0.1:7541');
 
 // Variables for the sugary goodness!
 var gui, param, varNum, interval;
@@ -41,11 +47,15 @@ var level_Manager = new Level_Manager();
 
 var objects = [];
 
+// The fat model...
+var jointModels = [];
+var head, torso, upperArmL, upperArmR, lowerArmL, lowerArmR, handL, handR, upperLegL, upperLegR, lowerLegL, lowerLegR, footL, footR;
+
 var imgContainer;
 
 var architect;
-
-// Debugging Variable.
+// Debugging Variables.
+var skin,skin2,model2;
 var test;
 var loop = 0;
 var server =0;
@@ -76,27 +86,26 @@ function init(){
 	container.appendChild( info );
 
 	
-	// Set up the three scene
+	// Set up the three scene.
 	initScene();
-	// Set up the renderer type
+	// Set up the renderer type.
 	initRenderer();	
-	// Set up the lights
+	// Set up the lights.
 	setupLights();
-	// Set up the camera
+	// Set up the camera.
 	initCamera();
-	// create the game objects.
+	// Create the game objects.
 	createObjects();
 	// Gui stuff.
 	setupGui();
-	// Skybox...etc
+	// Skybox...etc.
 	setupEnviornment();
 	// Request players from the server.
 	getPlayers();
-	// Create the players got from the server.
-	createPlayers();
 	// Send the server your data.
 	sendData();
-	
+	// Test code is stuffed in here.
+	ExampleCode();
 	// Initalise the game loop to 60fps. Anim frame pffft
 	interval = setInterval( 'gameLoop()', 1000 / 60 );
 
@@ -178,28 +187,40 @@ function initRenderer(){
 */
 function setupLights(){
 	
-	// Ambient
-	var ambientLight = new THREE.AmbientLight( Math.random() * 0x10 );
-	// Add to the scene.
-	scene.add( ambientLight );
 	
+	var ambient = new THREE.AmbientLight( 0xffffff );
+				scene.add( ambient );
+
+				directionalLight = new THREE.DirectionalLight( 0xffffff );
+				directionalLight.position.y = -70;
+				directionalLight.position.z = 100;
+				directionalLight.position.normalize();
+				scene.add( directionalLight );
+
+				pointLight = new THREE.PointLight( 0xffaa00 );
+				pointLight.position.x = 0;
+				pointLight.position.y = 0;
+				pointLight.position.z = 0;
+				scene.add( pointLight );
+				
+
 	// Directional
-	var directionalLight = new THREE.DirectionalLight( Math.random() * 0xffffff );
-	directionalLight.position.x = Math.random() - 0.5;
-	directionalLight.position.y = Math.random() - 0.5;
-	directionalLight.position.z = Math.random() - 0.5;
+	var directionalLight = new THREE.DirectionalLight( 0xffffff );
+	directionalLight.position.x = 500;
+	directionalLight.position.y = 500;
+	directionalLight.position.z = 0;
 	directionalLight.position.normalize();
 	// Add to the scene.
 	scene.add( directionalLight );
 
 	// Another directional...
-	var directionalLight = new THREE.DirectionalLight( Math.random() * 0xffffff );
-	directionalLight.position.x = Math.random() - 0.5;
-	directionalLight.position.y = Math.random() - 0.5;
-	directionalLight.position.z = Math.random() - 0.5;
+	var directionalLight = new THREE.DirectionalLight( 0xffffff );
+	directionalLight.position.x = 3000;
+	directionalLight.position.y = 500;
+	directionalLight.position.z = -2000;
 	directionalLight.position.normalize();
 	// Add to the scene.
-	scene.add( directionalLight );
+	scene.add( directionalLight );/**/
 }
 
 
@@ -213,44 +234,61 @@ function setupLights(){
 function createObjects(){
 	
 
-		jointList = [ 'HEAD',
-				'LEFT_ELBOW',
-				'LEFT_FOOT',
-				'LEFT_HAND',
-				'LEFT_HIP',
-				'LEFT_KNEE',
-				'LEFT_SHOULDER',
-				'NECK',
-				'RIGHT_ELBOW',
-				'RIGHT_FOOT',
-				'RIGHT_HAND',
-				'RIGHT_HIP',
-				'RIGHT_KNEE',
-				'RIGHT_SHOULDER',
-				'TORSO'];
+		jointList = [ 'head',
+				'leftElbow',
+				'leftFoot',
+				'leftHand',
+				'leftHip',
+				'leftKnee',
+				'leftShoulder',
+				'neck',
+				'rightElbow',
+				'rightFoot',
+				'rightHand',
+				'rightHip',
+				'rightKnee',
+				'rightShoulder',
+				'torso'];
 				
-	player = new Player( "Default", new THREE.Vector3( 1000 , 100 ,1000 ) );
+	player = new Player( "Default", new THREE.Vector3( 9000 , 100 ,9000 ) );
 	
 	var my_scene = {
 				"map" : [
-					"##"
-					] 
+					"################",
+					"#..............#",
+					"#..............#",
+					"#..............#",
+					"#..............#",
+					"#..............#",
+					"#..............#",
+					"#..............#",
+					"#..............#",
+					"#..............#",
+					"#..............#",
+					"#..............#",
+					"#..............#",
+					"#..............#",
+					"#..............#",
+					"################"
+				] 
 	};
 			
 	architect = new Scene_Builder( my_scene );
 	
 	for ( var i = 0; i < 5; i++ ){
 	
-		objects.push( new Object( new THREE.Vector3( 1000*i, 1500, 5000 ), "Object" ) );	
+		//objects.push( new Object( new THREE.Vector3( 1000*i, 1500, 5000 ), "Object" ) );	
 	}		
 	
 	for ( var i = 0; i < 2; i++ ){
 	
-		objects.push( new Object( new THREE.Vector3( 2000*i, 250, 2000 ), "Bin" ) );	
+		//objects.push( new Object( new THREE.Vector3( 2000*i, 250, 2000 ), "Bin" ) );	
 	}	
 }
 
-
+var attached = false;
+var needsScale = true;
+var scaleX,scaleY,scaleZ = 50;
 
 /**	@Name:	Game Loop
 	@Brief:	This is the loop we call per frame to update the game.
@@ -274,9 +312,70 @@ function gameLoop(){
 	}
 	
 	// Test player wall collisions...
-	level_Manager.testCollision( player._mesh, scene );
+	//level_Manager.testCollision( player._mesh, scene );
 	
 	level_Manager.update( player, objects, camera );
+	
+	// Set the camera Z to the gui for debugging!
+	camera.position.x = param['camera_X'];
+	camera.position.y = param['camera_Y'];
+	camera.position.z = param['camera_Z'];
+	
+	// Look at the Player.
+	this.camera.lookAt( player.getPosition()  );	
+	
+	//
+	// Do the scaling before the positioning otherwise it will be off.
+	//	
+	if( needsScale ){
+		
+		for ( each in jointModels ){
+	
+			jointModels[ each ].scale.set( scaleX, scaleY, scaleZ );
+			jointModels[ each ].updateMatrix();
+		}
+		needsScale = false;
+	}
+	
+	// 
+	// Set the positions of the models each frame.
+	//	
+	if ( player._kinectData != undefined && player._kinectData != null ){
+	
+		head.position 		= 	player._rig._joint["neck"].getPosition();
+		torso.position 		= 	player._rig._joint["torso"].getPosition();
+		upperArmL.position 	= 	player._rig._joint["leftShoulder"].getPosition();
+		upperArmR.position 	= 	player._rig._joint["rightShoulder"].getPosition();
+		lowerArmL.position 	= 	player._rig._joint["leftElbow"].getPosition();
+		lowerArmR.position 	= 	player._rig._joint["rightElbow"].getPosition();
+		handL.position 		= 	player._rig._joint["leftHand"].getPosition();
+		handR.position     	= 	player._rig._joint["rightHand"].getPosition();
+		upperLegL.position 	= 	player._rig._joint["leftHip"].getPosition();
+		upperLegR.position 	= 	player._rig._joint["rightHip"].getPosition();
+		lowerLegL.position 	= 	player._rig._joint["leftKnee"].getPosition();
+		lowerLegR.position 	= 	player._rig._joint["rightKnee"].getPosition();
+		footL.position 		= 	player._rig._joint["leftFoot"].getPosition();
+		footR.position 		= 	player._rig._joint["rightFoot"].getPosition();
+		
+		
+		//
+		// Set the orientation of the models each frame.
+		//
+		head.lookAt(  player.getSightNode()  );
+		torso.lookAt( player.getSightNode() );
+		footL.lookAt( player.getSightNode() );
+		footR.lookAt( player.getSightNode() );
+		handL.lookAt( player.getSightNode() );
+		handR.lookAt( player.getSightNode() );
+		upperArmL.lookAt( player._rig._joint["leftElbow"].getPosition() );
+		upperArmR.lookAt( player._rig._joint["rightElbow"].getPosition() );
+		lowerArmL.lookAt( player._rig._joint["leftHand"].getPosition() );
+		lowerArmR.lookAt( player._rig._joint["rightHand"].getPosition() );
+		upperLegL.lookAt( player._rig._joint["leftKnee"].getPosition() );
+		upperLegR.lookAt( player._rig._joint["rightKnee"].getPosition() );
+		lowerLegL.lookAt( player._rig._joint["leftFoot"].getPosition() );
+		lowerLegR.lookAt( player._rig._joint["rightFoot"].getPosition() );
+	}
 	
 	// Initalise last for the 1st iteration.
 	if(!last)last= new Date();
@@ -288,10 +387,12 @@ function gameLoop(){
 	deltaTime = current.getTime() - last.getTime();
 	
 	// reset the last time to time this frame for the next.
-	last = current;	
-
+	last = current;					
 	// Render the scene.
 	render();
+	
+	// 
+	//player._sightNode.y = player._rig._joint["torso"].getPosition();
 	
 	// Get the kinect data for the next frame.
 	socket.emit( 'updateKinect' );
@@ -324,18 +425,61 @@ function render(){
 function setupGui(){
 	
 	// The number of entries/spaces on the GUI
-	varNum = 5
+	varNum = 47
 	
 	// Create the GUI
-	 gui = new DAT.GUI( { varNum : 5 * 32 - 1} );
+	gui = new DAT.GUI( { varNum : 5 * 32 - 1} );
 	 
-	 // Store the list of changable parameters.
-	 param = {
-	 fps:60,
-	 parallaxSpeed:2,
-	 cameraX:0,
-	 cameraY:500,
-	 cameraZ:-500
+		 // Store the list of changable parameters.
+	param = {
+		 fps:60,
+		 parallaxSpeed:2,
+		 camera_X:8000,		// 0
+		 camera_Y:5000,
+		 camera_Z:8000,
+		 Head_X:8000,		// 1
+		 Head_Y:500,
+		 Head_Z:8000,
+		 UpperArmL_X:8000,	// 2
+		 UpperArmL_Y:1500,
+		 UpperArmL_Z:8000,
+		 UpperArmR_X:8000,	// 3
+		 UpperArmR_Y:500,
+		 UpperArmR_Z:8000,
+		 ForeArmL_X:8000,	// 4
+		 ForeArmL_Y:1500,
+		 ForeArmL_Z:8000,
+		 ForeArmR_X:8000,	// 5
+		 ForeArmR_Y:500,
+		 ForeArmR_Z:8000,
+		 Torso_X:8000,		// 6
+		 Torso_Y:500,
+		 Torso_Z:8000,
+		 HandL_X:8000,		// 7
+		 HandL_Y:500,
+		 HandL_Z:8000,
+		 HandR_X:8000,		// 8
+		 HandR_Y:500,
+		 HandR_Z:8000,
+		 UpperLegL_X:8000,	// 9
+		 UpperLegL_Y:500,
+		 UpperLegL_Z:8000,
+		 UpperLegR_X:8000,	// 10
+		 UpperLegR_Y:500,
+		 UpperLegR_Z:8000,
+		 LowerLegL_X:8000,	// 11
+		 LowerLegL_Y:500,
+		 LowerLegL_Z:8000,
+		 LowerLegR_X:8000,	// 12
+		 LowerLegR_Y:500,
+		 LowerLegR_Z:8000,
+		 FootL_X:8000,		// 13
+		 FootL_Y:500,
+		 FootL_Z:8000,
+		 FootR_X:8000,		// 14
+		 FootR_Y:500,
+		 FootR_Z:8000,
+	 
 	 };
 	 
 	 // Add the paramater values to the GUI, give it a name, upon change specify the callback function.
@@ -356,29 +500,243 @@ function setupGui(){
 	
 	
 	// Camera GUI data, no need to call anything on change. It will update on the next tick.
-
 	
-	 /* Add the paramater values to the GUI, give it a name, set the min and max values 
+	/* Add the paramater values to the GUI, give it a name, set the min and max values 
 		inside the clip plane upon change specify the callback function*/
-	 gui.add( param, 'cameraX').name('Camera.X').min(( farClip  ) * -1).max(farClip).step(100).onFinishChange(function(){
+	gui.add( param, 'camera_X').name('Camera_X').min( 5000 ).max( 10000 ).step( 10 ).onFinishChange(function(){
 		
 		
 	});
 	
-	 // Add the paramater values to the GUI, give it a name, upon change specify the callback function
-	 gui.add( param, 'cameraY').name('Camera.Y').min(( farClip ) * -1).max(farClip).step(100).onFinishChange(function(){
+	// Add the paramater values to the GUI, give it a name, upon change specify the callback function
+	gui.add( param, 'camera_Y').name('Camera_Y').min(( 0 ) * -1).max( farClip ).step(100).onFinishChange(function(){
 		
 		
 	});
 	
-	 // Add the paramater values to the GUI, give it a name, upon change specify the callback function
-	 gui.add( param, 'cameraZ').name('Camera.Z').min(( farClip ) * -1).max(farClip).step(100).onFinishChange(function(){
+	// Add the paramater values to the GUI, give it a name, upon change specify the callback function
+	gui.add( param, 'camera_Z').name('Camera_Z').min( 5000 ).max( 10000 ).step( 10 ).onFinishChange(function(){
 		
 		
 	});
-
+	
+	//
+	gui.add( param, 'Head_X').name('Head_X').min( 5000 ).max( 10000 ).step( 10 ).onFinishChange(function(){
+		head.position.x = param['Head_X'];
+		
+	});
+	
+	// Add the paramater values to the GUI, give it a name, upon change specify the callback function
+	gui.add( param, 'Head_Y').name('Head_Y').min( 0 ).max( 5000 ).step( 10 ).onFinishChange(function(){
+		head.position.y = param['Head_Y'];
+		
+	});
+	
+	// Add the paramater values to the GUI, give it a name, upon change specify the callback function
+	gui.add( param, 'Head_Z').name('Head_Z').min( 5000 ).max( 10000 ).step( 10 ).onFinishChange(function(){
+		head.position.z = param['Head_Z'];
+		
+	});
+	
+	
+	//
+	gui.add( param, 'Torso_X').name('Torso_X').min( 5000 ).max( 10000 ).step( 10 ).onFinishChange(function(){
+		torso.position.x = param['Torso_X'];
+		
+	});
+	
+	// Add the paramater values to the GUI, give it a name, upon change specify the callback function
+	gui.add( param, 'Torso_Y').name('Torso_Y').min( 0 ).max( 5000 ).step( 10 ).onFinishChange(function(){
+		torso.position.y = param['Torso_Y'];
+		
+	});
+	
+	// Add the paramater values to the GUI, give it a name, upon change specify the callback function
+	gui.add( param, 'Torso_Z').name('Torso_Z').min( 5000 ).max( farClip ).step( 10 ).onFinishChange(function(){
+		torso.position.z = param['Torso_Z'];
+		
+	});
+	
+	//
+	gui.add( param, 'UpperArmL_X').name('UpperArmL_X').min( 5000 ).max( 10000 ).step( 10 ).onFinishChange(function(){
+		upperArmL.position.x = param['UpperArmL_X'];
+		
+	});
+	
+	// Add the paramater values to the GUI, give it a name, upon change specify the callback function
+	gui.add( param, 'UpperArmL_Y').name('UpperArmL_Y').min( 0 ).max( 5000 ).step( 10 ).onFinishChange(function(){
+		upperArmL.position.y = param['UpperArmL_Y'];
+		
+	});
+	
+	// Add the paramater values to the GUI, give it a name, upon change specify the callback function
+	gui.add( param, 'UpperArmL_Z').name('UpperArmL_Z').min( 5000 ).max( 10000 ).step( 10 ).onFinishChange(function(){
+		upperArmL.position.z = param['UpperArmL_Z'];
+		
+	});
+	
+	//
+	gui.add( param, 'UpperArmR_X').name('UpperArmR_X').min( 5000 ).max( 10000 ).step( 10 ).onFinishChange(function(){
+		upperArmR.position.x = param['UpperArmR_X'];
+		
+	});
+	
+	// Add the paramater values to the GUI, give it a name, upon change specify the callback function
+	gui.add( param, 'UpperArmR_Y').name('UpperArmR_Y').min( 0 ).max( 5000 ).step( 10 ).onFinishChange(function(){
+		upperArmR.position.y = param['UpperArmR_Y'];
+		
+	});
+	
+	// Add the paramater values to the GUI, give it a name, upon change specify the callback function
+	gui.add( param, 'UpperArmR_Z').name('UpperArmR_Z').min( 5000 ).max( 10000 ).step( 10 ).onFinishChange(function(){
+		upperArmR.position.z = param['UpperArmR_Z'];
+		
+	});
+	
+	//
+	gui.add( param, 'ForeArmL_X').name('ForeArmL_X').min( 5000 ).max( 10000 ).step( 10 ).onFinishChange(function(){
+		lowerArmL.position.x = param['ForeArmL_X'];
+		
+	});
+	
+	// Add the paramater values to the GUI, give it a name, upon change specify the callback function
+	gui.add( param, 'ForeArmL_Y').name('ForeArmL_Y').min( 0 ).max( 5000 ).step( 10 ).onFinishChange(function(){
+		lowerArmL.position.y = param['ForeArmL_Y'];
+		
+	});
+	
+	// Add the paramater values to the GUI, give it a name, upon change specify the callback function
+	gui.add( param, 'ForeArmL_Z').name('ForeArmL_Z').min( 5000 ).max( 10000 ).step( 10 ).onFinishChange(function(){
+		lowerArmL.position.z = param['ForeArmL_Z'];
+		
+	});
+	
+	//
+	gui.add( param, 'ForeArmR_X').name('ForeArmR_X').min( 5000 ).max( 10000 ).step( 10 ).onFinishChange(function(){
+		lowerArmR.position.x = param['ForeArmR_X'];
+		
+	});
+	
+	// Add the paramater values to the GUI, give it a name, upon change specify the callback function
+	gui.add( param, 'ForeArmR_Y').name('ForeArmR_Y').min( 0 ).max( 5000 ).step( 10 ).onFinishChange(function(){
+		lowerArmR.position.y = param['ForeArmR_Y'];
+		
+	});
+	
+	// Add the paramater values to the GUI, give it a name, upon change specify the callback function
+	gui.add( param, 'ForeArmR_Z').name('ForeArmR_Z').min( 5000 ).max( 10000 ).step( 10 ).onFinishChange(function(){
+		lowerArmR.position.z = param['ForeArmR_Z'];
+		
+	});
+	
+	//
+	gui.add( param, 'HandL_X').name('HandL_X').min( 5000 ).max( 10000 ).step( 10 ).onFinishChange(function(){
+		handL.position.x = param['HandL_X'];
+		
+	});
+	
+	// Add the paramater values to the GUI, give it a name, upon change specify the callback function
+	gui.add( param, 'HandL_Y').name('HandL_Y').min( 0 ).max( 5000 ).step( 10 ).onFinishChange(function(){
+		handL.position.y = param['HandL_Y'];
+		
+	});
+	
+	// Add the paramater values to the GUI, give it a name, upon change specify the callback function
+	gui.add( param, 'HandL_Z').name('HandL_Z').min( 5000 ).max( 10000 ).step( 10 ).onFinishChange(function(){
+		handL.position.z = param['HandL_Z'];
+		
+	});
+	
+	//
+	gui.add( param, 'HandR_X').name('HandR_X').min( 5000 ).max( 10000 ).step( 10 ).onFinishChange(function(){
+		handR.position.x = param['HandR_X'];
+		
+	});
+	
+	// Add the paramater values to the GUI, give it a name, upon change specify the callback function
+	gui.add( param, 'HandR_Y').name('HandR_Y').min( 0 ).max( 5000 ).step( 10 ).onFinishChange(function(){
+		handR.position.y = param['HandR_Y'];
+		
+	});
+	
+	// Add the paramater values to the GUI, give it a name, upon change specify the callback function
+	gui.add( param, 'HandR_Z').name('HandR_Z').min( 5000 ).max( 10000 ).step( 10 ).onFinishChange(function(){
+		handR.position.z = param['HandR_Z'];
+		
+	});
+	
+	//
+	gui.add( param, 'UpperLegL_X').name('UpperLegL_X').min( 5000 ).max( 10000 ).step( 10 ).onFinishChange(function(){
+		upperLegL.position.x = param['UpperLegL_X'];
+		
+	});
+	
+	// Add the paramater values to the GUI, give it a name, upon change specify the callback function
+	gui.add( param, 'UpperLegL_Y').name('UpperLegL_Y').min( 0 ).max( 5000 ).step( 10 ).onFinishChange(function(){
+		upperLegL.position.y = param['UpperLegL_Y'];
+		
+	});
+	
+	// Add the paramater values to the GUI, give it a name, upon change specify the callback function
+	gui.add( param, 'UpperLegL_Z').name('UpperLegL_Z').min( 5000 ).max( 10000 ).step( 10 ).onFinishChange(function(){
+		upperLegL.position.z = param['UpperLegL_Z'];
+		
+	});
+	
+	//
+	gui.add( param, 'UpperLegR_X').name('UpperLegR_X').min( 5000 ).max( 10000 ).step( 10 ).onFinishChange(function(){
+		upperLegR.position.x = param['UpperLegR_X'];
+		
+	});
+	
+	// Add the paramater values to the GUI, give it a name, upon change specify the callback function
+	gui.add( param, 'UpperLegR_Y').name('UpperLegR_Y').min( 0 ).max( 5000 ).step( 10 ).onFinishChange(function(){
+		upperLegR.position.y = param['UpperLegR_Y'];
+		
+	});
+	
+	// Add the paramater values to the GUI, give it a name, upon change specify the callback function
+	gui.add( param, 'UpperLegR_Z').name('UpperLegR_Z').min( 5000 ).max( 10000 ).step( 10 ).onFinishChange(function(){
+		upperLegR.position.z = param['UpperLegR_Z'];
+		
+	});
+	
+	//
+	gui.add( param, 'FootL_X').name('FootL_X').min( 5000 ).max( 10000 ).step( 10 ).onFinishChange(function(){
+		footL.position.x = param['FootL_X'];
+		
+	});
+	
+	// Add the paramater values to the GUI, give it a name, upon change specify the callback function
+	gui.add( param, 'FootL_Y').name('FootL_Y').min( 0 ).max( 5000 ).step( 10 ).onFinishChange(function(){
+		footL.position.y = param['FootL_Y'];
+		
+	});
+	
+	// Add the paramater values to the GUI, give it a name, upon change specify the callback function
+	gui.add( param, 'FootL_Z').name('FootL_Z').min( 5000 ).max( 10000 ).step( 10 ).onFinishChange(function(){
+		footL.position.z = param['FootL_Z'];
+		
+	});
+	
+	//
+	gui.add( param, 'FootR_X').name('FootR_X').min( 5000 ).max( 10000 ).step( 10 ).onFinishChange(function(){
+		footR.position.x = param['FootR_X'];
+		
+	});
+	
+	// Add the paramater values to the GUI, give it a name, upon change specify the callback function
+	gui.add( param, 'FootR_Y').name('FootR_Y').min( 0 ).max( 5000 ).step( 10 ).onFinishChange(function(){
+		footR.position.y = param['FootR_Y'];
+		
+	});
+	
+	// Add the paramater values to the GUI, give it a name, upon change specify the callback function
+	gui.add( param, 'FootR_Z').name('FootR_Z').min( 5000 ).max( 10000 ).step( 10 ).onFinishChange(function(){
+		footR.position.z = param['FootR_Z'];
+		
+	});	
 }
-
 
 
 
@@ -413,18 +771,19 @@ function setupEnviornment(){
 	var planeGeo = new THREE.PlaneGeometry(100000, 100000, 1, 10);
 	
 	var ground = new THREE.Mesh( planeGeo, new THREE.MeshBasicMaterial({
-		 map: planeTex 
+		 map: planeTex
 	}));
 	
-	ground .rotation.x = -Math.PI / 2;
+	//ground .rotation.x = -Math.PI / 2;
 	ground .position.y = 0;
 	ground .receiveShadow = true;
 	ground.doubleSided = true;
 	scene.add( ground );
-
+	
+	//
+	addTrees();
+	
 }
-
-
 
 
 /**	@Name:	Skybox
@@ -458,6 +817,287 @@ function Skybox(){
  }
  
  
+ function addTrees(){
+ 
+	var treeNum = 0;
+	
+	var treeBill = new THREE.Texture(imageManager.getAsset('img/Tree1.png' , {}, render()));	
+		treeBill.needsUpdate = true;
+	var treeGeo = new THREE.PlaneGeometry(500, 500, 1, 10);
+	
+	for( var i =0; i< treeNum;i++ ){
+	
+		var tree = new THREE.Mesh( treeGeo, new THREE.MeshBasicMaterial({
+			 map: treeBill, transparent:true  
+		}));
+		
+		//tree .rotation.x = -Math.PI / 2;
+		tree .position.x = randomRange( 100, 15000);
+		tree .position.y = 200;
+		tree .position.z = randomRange( 100, 5000);
+		tree .receiveShadow = true;
+		tree .castShadow = true;
+		tree.doubleSided = true;
+		scene.add( tree );
+	
+	}
+	
+ 
+ };
+ 
+ 
+ 
+ function addLionMale( collada ){
+ 
+	var model = collada.scene;
+	skin = collada.skins[0];
+	model.updateMatrix();
+	scene.add( model );
+	
+	model.name = "LionMale";
+	model .castShadow = true;
+	model.rotation.x = -Math.PI/2;
+	model.position.x = 7500;
+	model.position.y -= 0;
+	model.position.z = 7500;
+	model.scale.set(100,100,100);
+ 
+  
+ };
+ 
+ 
+ function addHouse( collada ){
+ 
+	var model = collada.scene;
+	model.updateMatrix();
+	scene.add( model );
+	
+	model.name = "House";
+	model .castShadow = true;
+	model.position.x = 8000;
+	model.position.y -= 20;
+	model.position.z = 8000;
+	//model.scale.set(50,50,50);
+	model.rotation.x = -Math.PI/2;
+ 
+ };
+ 
+ var offsetX =8000;
+ var offsetY = 500;
+ var offsetZ =8000;
+ 
+ /*
+ // The fat model...
+var jointModels = [];
+var head, torso, upperArmL, upperArmR, lowerArmL, lowerArmR, handL, handR, upperLegL, upperLegR, lowerLegL, lowerLegR, footL, footR;
+ 
+*/
+
+ function head( collada ){
+ 
+	head = collada.scene;
+	head.updateMatrix();
+	scene.add( head );
+	
+	head.name = "HEAD";
+	head.scale.set(50,50,50);
+	head.position = player._rig._joint["HEAD"].getPosition();
+
+	jointModels.push( head );
+ 
+ }
+ 
+ function torso( collada ){
+ 
+	torso = collada.scene;
+	torso.updateMatrix();
+	scene.add( torso );
+	
+	torso.name = "TORSO";
+	torso.scale.set(20,20,20);
+	torso.position = player._rig._joint["TORSO"].getPosition();
+	
+	jointModels.push( torso );
+ 
+ }
+ 
+ function armUpperL( collada ){
+ 
+	upperArmL = collada.scene;
+	upperArmL.updateMatrix();
+	scene.add( upperArmL );
+	
+	upperArmL.name = "ARM_UPPER_L";
+	upperArmL.scale.set(50,50,50);
+	upperArmL.position = player._rig._joint["LEFT_SHOULDER"].getPosition();
+	
+	jointModels.push( upperArmL );
+ }
+ 
+ function armUpperR ( collada ){
+ 
+	upperArmR = collada.scene;
+	upperArmR.updateMatrix();
+	scene.add( upperArmR );
+	
+	upperArmR.name = "ARM_UPPER_R";
+	upperArmR.scale.set(50,50,50);
+	upperArmR.position = player._rig._joint["RIGHT_SHOULDER"].getPosition();
+	
+	jointModels.push( upperArmR );
+ 
+ }
+
+ function footL( collada ){
+	
+	footL = collada.scene;
+	footL.updateMatrix();
+	scene.add( footL );
+	
+	footL.name = "FOOT_L";
+	footL.scale.set(50,50,50);
+	footL.position = player._rig._joint["LEFT_FOOT"].getPosition();
+	
+	jointModels.push( footL );
+ 
+ }
+ 
+ function footR( collada ){
+ 
+	footR = collada.scene;
+	footR.updateMatrix();
+	scene.add( footR );
+	
+	footR.name = "FOOT_R";
+	footR.scale.set(50,50,50);
+	footR.position = player._rig._joint["RIGHT_FOOT"].getPosition();
+	
+	jointModels.push( footR );
+ 
+ }
+
+ function foreArmL( collada ){
+ 
+	lowerArmL = collada.scene;
+	lowerArmL.updateMatrix();
+	scene.add( lowerArmL );
+	
+	lowerArmL.name = "FOREARM_L";
+	lowerArmL.scale.set(50,50,50);
+	lowerArmL.position = player._rig._joint["LEFT_ELBOW"].getPosition();
+	
+	jointModels.push( lowerArmL );
+ 
+ }
+ 
+ function foreArmR( collada ){
+ 
+	lowerArmR = collada.scene;
+	lowerArmR.updateMatrix();
+	scene.add( lowerArmR );
+	
+	lowerArmR.name = "FOREARM_R";
+	lowerArmR.scale.set(50,50,50);
+	lowerArmR.position = player._rig._joint["RIGHT_ELBOW"].getPosition();
+	
+	jointModels.push( lowerArmR );
+ 
+ }
+ 
+ function legUpperL( collada ){
+ 
+	upperLegL = collada.scene;
+	upperLegL.updateMatrix();
+	scene.add( upperLegL );
+	
+	upperLegL.name = "LEG_UPPER_L";
+	upperLegL.scale.set(50,50,50);
+	upperLegL.position = player._rig._joint["LEFT_HIP"].getPosition();
+	
+	jointModels.push( upperLegL );
+ 
+ }
+ 
+ function legUpperR( collada ){
+ 
+	upperLegR = collada.scene;
+	upperLegR.updateMatrix();
+	scene.add( upperLegR );
+	
+	upperLegR.name = "LEG_UPPER_R";
+	upperLegR.scale.set(50,50,50);
+	upperLegR.position = player._rig._joint["RIGHT_HIP"].getPosition();
+	
+	jointModels.push( upperLegR );
+ 
+ }
+ 
+ function legLowerR( collada ){
+ 
+	lowerLegR = collada.scene;
+	lowerLegR.updateMatrix();
+	scene.add( lowerLegR );
+	
+	lowerLegR.name = "LEG_LOWER_R";
+	lowerLegR.scale.set(50,50,50);
+	lowerLegR.position = player._rig._joint["RIGHT_KNEE"].getPosition();
+	
+	jointModels.push( lowerLegR );
+ }
+ 
+ function legLowerL( collada ){
+ 
+	lowerLegL = collada.scene;
+	lowerLegL.updateMatrix();
+	scene.add( lowerLegL );
+	
+	lowerLegL.name = "LEG_LOWER_L";
+	lowerLegL.scale.set(50,50,50);
+	lowerLegL.position = player._rig._joint["LEFT_KNEE"].getPosition();
+	
+	jointModels.push( lowerLegL );
+ 
+ }
+ 
+ function handR( collada ){
+ 
+	handR = collada.scene;
+	handR.updateMatrix();
+	scene.add( handR );
+	
+	handR.name = "HAND_R";
+	handR.scale.set(50,50,50);
+	handR.position = player._rig._joint["RIGHT_HAND"].getPosition();
+	
+	jointModels.push( handR );
+ }
+ 
+ function handL( collada ){
+ 
+    handL = collada.scene;
+	handL.updateMatrix();
+	scene.add( handL );
+	
+	handL.name = "HAND_L";
+	handL.scale.set(50,50,50);
+	handL.position = player._rig._joint["LEFT_HAND"].getPosition();
+	
+	jointModels.push( handL );
+ 
+ }
+  
+ function addModels( collada ){
+ 
+	model = collada.scene;
+	model.updateMatrix();
+	scene.add( model );
+	
+	model.scale.set(50,50,50);
+	model.position.x = offsetX;
+	model.position.y = offsetY;
+	model.position.z = offsetZ;
+	offsetZ += 1000;
+ }
  
  
 /**	@Name:	Example code
@@ -489,16 +1129,63 @@ function Skybox(){
 	//
 	// Load a model and add it to the scene.
 	//
-/**
-	var x = new THREE.ColladaLoader();
-	x.load( 'models/warehouse_model.dae', function( collada ){
-		var model = collada.scene;
-		model.scale.set(100,100,100);
-		model.rotation.x = -Math.PI/2;
-		scene.add( model );	
-	
-	});
-*/
+	var url = 'model/limbs/'
+	var modelNames = [  "head.dae", "torso.dae", "armUpper_l.dae", "armUpper_r.dae",
+						"foot_l.dae", "foot_r.dae", "hand_l.dae","hand_r.dae",
+						"foreArm_l.dae", "foreArm_r.dae", "legLower_r.dae","legLower_l.dae",
+						"legUpper_l.dae", "legUpper_r.dae"];
+	for ( i in modelNames ){
+		
+		var x = new THREE.ColladaLoader();
+		
+		switch( modelNames[ i ] ){
+			
+			case "head.dae":
+				x.load( url + modelNames[i] , head );
+				break;
+			case "torso.dae":
+				x.load( url + modelNames[i] , torso );
+				break;
+			case "armUpper_l.dae":
+				x.load( url + modelNames[i] , armUpperL );
+				break;
+			case "armUpper_r.dae":
+				x.load( url + modelNames[i] , armUpperR);
+				break;
+			case "foot_l.dae":
+				x.load( url + modelNames[i] , footL );
+				break;
+			case "foot_r.dae":
+				x.load( url + modelNames[i] , footR );
+				break;
+			case "hand_l.dae":
+				x.load( url + modelNames[i] , handL );
+				break;
+			case "hand_r.dae":
+				x.load( url + modelNames[i] , handR );
+				break;
+			case "foreArm_l.dae":
+				x.load( url + modelNames[i] , foreArmL );
+				break;
+			case "foreArm_r.dae":
+				x.load( url + modelNames[i] , foreArmR );
+				break;
+			case "legLower_r.dae":
+				x.load( url + modelNames[i] , legLowerR );
+				break;
+			case "legLower_l.dae":
+				x.load( url + modelNames[i] , legLowerL );
+				break;
+			case "legUpper_l.dae":
+				x.load( url + modelNames[i] , legUpperL );
+				break;
+			case "legUpper_r.dae":
+				x.load( url + modelNames[i] , legUpperR );
+				break;
+			default:
+				break;
+			}
+	}
 
 
 	//
@@ -525,25 +1212,11 @@ function Skybox(){
 	
  }
 
-
  
- 
-/**	@Name:	Sync Users
-	@Brief:	Syncronise the users kinect data with the player object in game.
-	@Arguments:N/A
-	@Returns:N/A
-*/
-function syncUsers() {  
-	
-} //End sync Users
-
-
-
 
 function getPlayers() {  
 	// Request all the players registered in the server.
 	socket.emit( 'getPlayers' );
-	socket.emit( 'test' );
 }  
 
 
@@ -661,11 +1334,11 @@ function handleKeyEvents( event ) {
 		
 		case 38:
 	  		// Move Forward
-			player.move( +1 );
+			player.moveModel( +1 );
 	  		break;
 		case 40:
 	  		// Move Back
-			player.move( -1 );
+			player.moveModel( -1 );
 	  		break;
 		case 37:
 	  		// Move Left
@@ -677,12 +1350,12 @@ function handleKeyEvents( event ) {
 	  		break;
 		case 65:
 	  		// Rotate Left
-			player.rotateLeft();
+			player.rotateModelLeft();
 			//testOne( player._sightNode, player._position );
 	  		break;
 		case 68:
 	  		// Rotate Right
-			player.rotateRight();
+			player.rotateModelRight();
 			//testTwo( player._sightNode, player._position  );
 	  		break;
 		case 87:
@@ -700,8 +1373,6 @@ function handleKeyEvents( event ) {
 	  		break;
 		case 90:
 		// Top down.
-			camera.position.y += 100;
-			camera.lookAt( player.getPosition() );
 	  		break;
 		default:
 			update = false;
@@ -718,71 +1389,6 @@ function handleKeyEvents( event ) {
 		socket.emit('updateMe', map	);
 	}	
 }
-
-
-function testOne( vec1, vec2 ){
-	
-	var theta = 0.1;
-	// Translate to point of rotation.
-	vec1.subSelf( vec2 );
-	vec1.normalise();
-	// About z
-	vec1.x = ( Math.cos( theta ) - Math.sin( theta ) + 0 ) * vec1.x; 
-	vec1.y = ( Math.sin( theta ) + Math.cos( theta ) + 0 ) * vec1.y;
-	vec1.z = ( 			0 		 + 			0 		 + 1 ) * vec1.z 	
-	
-	// Translate...back.
-	vec1.addSelf( vec2 );
-	
-	return vec1;
-
-};
-function testTwo( vec1, vec2 ){
-	
-	var theta = 0.1;
-	// Translate to point of rotation.
-	vec1.subSelf( vec2 );
-	vec1.normalise();
-	// About y
-	vec1.x = ( Math.cos( theta ) + 0 + Math.sin( theta ) ) * vec1.x; 
-	vec1.y = ( 			0 		 + 1 + 			0 		 ) * vec1.y;
-	vec1.z = ( -Math.sin( theta )+ 0 + Math.cos( theta ) ) * vec1.z	
-	
-	// Translate...back.
-	vec1.addSelf( vec2 );
-	
-	return vec1;
-
-};
-function testThree( vec1, vec2 ){
-	
-	var theta = 0.1;
-	// Translate to point of rotation.
-	vec1.subSelf( vec2 );
-	vec1.normalise();
-	// About x
-	vec1.x = ( 1 + 			0 		 + 			0 		 ) * vec1.x; 
-	vec1.y = ( 0 + Math.cos( theta ) - Math.sin( theta ) ) * vec1.y;
-	vec1.z = ( 0 + Math.sin( theta ) + Math.cos( theta ) ) * vec1.z 	
-	
-	// Translate...back.
-	vec1.addSelf( vec2 );
-	
-	return vec1;
-
-};
-function testFour( vec1, vec2 ){
-	
-	var theta = 0.1;
-	vec1.normalise();
-	vec2.normalise();
-	// Translate to point of rotation.
-	vec1
-	
-	
-	return vec1;
-
-};
 
 
 
@@ -802,8 +1408,18 @@ socket.on( 'playersDataFromServer',function( data ){
 
 socket.on( 'registerSelf', function( data ){
 	
+	/**	The format of a player on the server.
+			"name": data.name,
+			"pos":data.pos,
+			"ip":client.handshake.address.address,
+			"kinect":data.kinect,
+			"id": data.id,
+			"meshName":data.mesh,
+			"visible": data.visible
+	*/
 	player._name = data.player.name;
 	player._ip = data.player.ip;
+	player._userId = data.id;
 	
 });
 

@@ -57,11 +57,11 @@ Collision_Manager.prototype.testCollision = function( objA, scene ){
 			
 			moveableObjects.push( sceneMeshes[ index ] );
 		}
-		else if( sceneMeshes[ index ].name === "LEFT_HAND" ){
+		else if( sceneMeshes[ index ].name === "leftHand" ){
 			
 			leftHand = sceneMeshes[ index ] 
 		}
-		else if( sceneMeshes[ index ].name === "RIGHT_HAND" ){
+		else if( sceneMeshes[ index ].name === "rightHand" ){
 			
 			rightHand = sceneMeshes[ index ] 
 		}

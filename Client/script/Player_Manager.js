@@ -1,10 +1,8 @@
 
 /**	@Name:	Player_Manager Class
-
-	@Author: James Browne
-	
-	@Brief:
-	A Player_Manager that controls all the players connected to the game.
+	@Author: James Browne	
+	@Brief:	A Player_Manager that controls all the players connected to the game.
+	TODO
 
 */
 function Player_Manager(  ){
